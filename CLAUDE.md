@@ -52,7 +52,9 @@ Tokens live in `frontend/lib/tokens.ts` (C, IRIDESCENT, R, LABEL) and mirror CSS
 - Primary interactive styles: `.ghost-link` (text + arrow) and `.ghost-pill` (1px Bone outline,
   inverts to Bone fill on hover). No filled color buttons except destructive risk actions
 - Landing hero: iridescent bank card (chip, masked PAN, cardholder) with a scoring sweep, a FLAGGED
-  transaction stamp (risk 94), headline ink layer clipped to the card, and a live transaction tape
+  transaction stamp (risk 94). The card rig sways (.card-sway) and the ink headline copy inside it runs
+  the mirrored rotation (.card-counter) about the same pivot so it stays registered with the page copy;
+  keep both keyframes in sync. Hero publishes --sw/--sh via ResizeObserver for that geometry; and a live transaction tape
   marquee (flagged rows in risk red). No circles, spheres or ring ornaments
 - Landing sections: `(NN)` index label + hairline, 76-119px vertical rhythm
 

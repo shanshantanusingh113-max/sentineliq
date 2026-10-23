@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { motion, type Variants } from 'framer-motion'
 import { C, IRIDESCENT, LABEL } from '@/lib/tokens'
@@ -217,15 +217,16 @@ function CapabilityVisual({ kind }: { kind: 'baseline' | 'ensemble' | 'shap' | '
   )
 }
 
-// Hero card geometry - the ink layer is clipped to exactly this footprint
+// Hero card geometry. The section publishes its measured size as --sw / --sh so the
+// ink copy can sit INSIDE the card, counter-rotated, and stay registered with the page copy.
+const SW = 'var(--sw, 100vw)'
+const SH = 'var(--sh, 100svh)'
 const CARD_W = 'clamp(280px, 34vw, 500px)'
 const CARD_H = `calc(${CARD_W} / 1.586)`
-// right edge of the 1400px content column, inside the gutter
-const EDGE_R = `(max(0px, (100% - ${MAX}px) / 2) + ${GUTTER})`
-const CARD_X = `(100% - ${EDGE_R} - ${CARD_W} / 2)`
-const CARD_Y = '31%'
 const CARD_R = 22
-const CARD_CLIP = `inset(calc(${CARD_Y} - ${CARD_H} / 2) calc(100% - ${CARD_X} - ${CARD_W} / 2) calc(100% - ${CARD_Y} - ${CARD_H} / 2) calc(${CARD_X} - ${CARD_W} / 2) round ${CARD_R}px)`
+// card's top-left inside the hero: right edge on the 1400px content column, centre at 31% height
+const CARD_L = `(${SW} - max(0px, (${SW} - ${MAX}px) / 2) - ${GUTTER} - ${CARD_W})`
+const CARD_T = `(${SH} * 0.31 - ${CARD_H} / 2)`
 
 const TAPE = [
   { id: 'TXN-8F21', kind: 'Wire', amt: '$48,200.00', who: 'J. Sterling', where: 'Lagos', at: '02:14', score: 94 },
@@ -308,8 +309,8 @@ function FlagStamp() {
       transition={{ duration: 0.6, delay: 1.1 }}
       style={{
         position: 'absolute', zIndex: 4,
-        left: `calc(${CARD_X} + ${CARD_W} / 2 - 240px)`,
-        top: `calc(${CARD_Y} - ${CARD_H} / 2 - 44px)`,
+        right: 0,
+        top: -44,
         width: 240, background: C.bg, border: `1px solid ${C.border}`,
         fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
       }}
@@ -391,6 +392,21 @@ function HeadlineLines() {
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
+  const heroRef = useRef<HTMLElement>(null)
+
+  // Publish the hero's exact size so the card's inner ink copy can mirror the page layout
+  useEffect(() => {
+    const el = heroRef.current
+    if (!el) return
+    const apply = () => {
+      el.style.setProperty('--sw', `${el.clientWidth}px`)
+      el.style.setProperty('--sh', `${el.clientHeight}px`)
+    }
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -424,8 +440,13 @@ export default function LandingPage() {
       </header>
 
       {/* ── Hero ── */}
-      <section style={{ position: 'relative', minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', overflow: 'hidden' }}>
-        {/* Iridescent payment card - the single gradient moment */}
+      <section ref={heroRef} style={{ position: 'relative', minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', overflow: 'hidden' }}>
+        {/* Bone layer */}
+        <HeroCopy wrap={wrap} />
+
+        {/* Iridescent payment card - the single gradient moment. The rig sways; the ink copy
+            inside the card runs the mirrored animation around the same pivot, so the headline
+            stays put while the card rotates beneath it. */}
         <motion.div
           aria-hidden="true"
           className="hero-card"
@@ -433,31 +454,28 @@ export default function LandingPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            position: 'absolute', overflow: 'hidden',
-            left: `calc(${CARD_X} - ${CARD_W} / 2)`, top: `calc(${CARD_Y} - ${CARD_H} / 2)`,
-            width: CARD_W, height: CARD_H, borderRadius: CARD_R, background: IRIDESCENT,
+            position: 'absolute', zIndex: 2, pointerEvents: 'none',
+            left: `calc(${CARD_L})`, top: `calc(${CARD_T})`, width: CARD_W, height: CARD_H,
           }}
         >
-          <CardFace />
-        </motion.div>
-        <FlagStamp />
-
-        {/* Bone layer */}
-        <HeroCopy wrap={wrap} />
-
-        {/* Ink layer - same copy, clipped to the card, so letters read as ink on the gradient */}
-        <motion.div
-          aria-hidden="true"
-          className="hero-ink"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-          style={{
-            position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 46, pointerEvents: 'none',
-            clipPath: CARD_CLIP,
-          }}
-        >
-          <HeroCopy wrap={wrap} ink />
+          <div className="card-sway" style={{ position: 'absolute', inset: 0 }}>
+            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: CARD_R, background: IRIDESCENT, isolation: 'isolate' }}>
+              <CardFace />
+              <div
+                className="card-counter hero-ink"
+                style={{
+                  position: 'absolute',
+                  left: `calc(-1 * ${CARD_L})`, top: `calc(-1 * ${CARD_T})`,
+                  width: SW, height: SH,
+                  transformOrigin: `calc(${CARD_L} + ${CARD_W} / 2) calc(${CARD_T} + ${CARD_H} / 2)`,
+                  display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 46,
+                }}
+              >
+                <HeroCopy wrap={wrap} ink />
+              </div>
+            </div>
+            <FlagStamp />
+          </div>
         </motion.div>
 
         <TransactionTape />
@@ -465,6 +483,7 @@ export default function LandingPage() {
         {/* Scroll indicator */}
         <div
           aria-hidden="true"
+          className="hide-md"
           style={{
             position: 'fixed', right: `calc(max(0px, (100vw - ${MAX}px) / 2) + ${GUTTER})`, bottom: 76, zIndex: 30,
             ...LABEL, color: C.textPrimary,

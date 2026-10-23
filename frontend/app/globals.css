@@ -240,6 +240,25 @@ pre,
   animation-delay: 1.2s;
 }
 
+/* Hero card sway. .card-counter runs the exact mirror so the ink copy inside the card
+   stays registered with the page headline while the card rotates. Keep both in sync. */
+@keyframes card-sway {
+  0%, 100% { transform: rotate(-7deg); }
+  50%      { transform: rotate(3deg); }
+}
+@keyframes card-counter {
+  0%, 100% { transform: rotate(7deg); }
+  50%      { transform: rotate(-3deg); }
+}
+.card-sway {
+  transform: rotate(-7deg);
+  animation: card-sway 10s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.card-counter {
+  transform: rotate(7deg);
+  animation: card-counter 10s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
 /* Transaction tape - continuous ledger marquee under the hero */
 @keyframes tape-scroll {
   from { transform: translateX(0); }
@@ -293,6 +312,8 @@ pre,
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-arrow,
+  .card-sway,
+  .card-counter,
   .card-scan,
   .tape-track,
   .animate-pulse-dot {
