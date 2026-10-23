@@ -191,7 +191,7 @@ function UserProfilePanel({
             <div
               style={{
                 width: 44, height: 44, borderRadius: '50%',
-                background: riskColor(detail.risk_score),
+                background: C.panel, border: `1px solid ${riskColor(detail.risk_score)}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 15, fontWeight: 500, color: C.textPrimary, flexShrink: 0,
               }}
@@ -323,7 +323,7 @@ function UserProfilePanel({
                 padding: '9px 0', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
                 background: restricted ? C.border : C.critical,
                 border: 'none', color: restricted ? C.textMuted : C.textPrimary,
-                borderRadius: 0, cursor: restricted ? 'default' : 'pointer',
+                borderRadius: 10, cursor: restricted ? 'default' : 'pointer',
               }}
             >
               {restricted ? 'ACCESS RESTRICTED' : 'RESTRICT ACCESS'}
@@ -337,7 +337,7 @@ function UserProfilePanel({
                 background: escalated ? `${C.amber}22` : 'transparent',
                 border: `1px solid ${escalated ? C.amber : C.border}`,
                 color: escalated ? C.amber : C.textMuted,
-                borderRadius: 0, cursor: escalated ? 'default' : 'pointer',
+                borderRadius: 10, cursor: escalated ? 'default' : 'pointer',
               }}
             >
               {escalated ? 'ESCALATED' : 'ESCALATE CASE'}
@@ -443,7 +443,7 @@ export default function UsersPage() {
         <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h2 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textPrimary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <h2 style={{ margin: 0, fontSize: 11, fontWeight: 400, color: C.textPrimary, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 Monitoring Queue
               </h2>
               {/* Watchlist filter tabs */}

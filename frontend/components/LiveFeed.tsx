@@ -124,7 +124,7 @@ export default function LiveFeed({ onAlertClick }: { onAlertClick?: (alertId: st
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span className="animate-pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: C.low, display: 'inline-block' }} />
-          <span style={{ fontSize: 12, fontWeight: 500, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <span style={{ fontSize: 11, fontWeight: 400, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Live Intelligence Feed
           </span>
         </div>

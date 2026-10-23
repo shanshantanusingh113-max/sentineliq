@@ -76,7 +76,7 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="rise-list">
           {users.map((user) => {
             const level = riskLevel(user.risk_score)
             const isWatched = watchlist?.has(user.id) ?? false
@@ -119,7 +119,7 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
                     <div
                       style={{
                         width: 30, height: 30, borderRadius: '50%',
-                        background: riskColor(user.risk_score),
+                        background: C.panel, border: `1px solid ${riskColor(user.risk_score)}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 11, fontWeight: 700, color: C.textPrimary, flexShrink: 0,
                       }}
@@ -173,7 +173,7 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
                     <button
                       onClick={(e) => { e.stopPropagation(); onSelectUser(user.id) }}
                       style={{
-                        fontSize: 10, padding: '4px 8px', borderRadius: 0,
+                        fontSize: 10, padding: '4px 8px', borderRadius: 10,
                         background: 'transparent', border: `1px solid ${C.border}`,
                         color: C.textMuted, cursor: 'pointer', fontWeight: 500, letterSpacing: '0.04em',
                       }}

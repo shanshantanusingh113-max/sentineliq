@@ -51,11 +51,16 @@ Tokens live in `frontend/lib/tokens.ts` (C, IRIDESCENT, R, LABEL) and mirror CSS
 - Labels: 11px uppercase, letter-spacing 0.05em (museum signage). Use `.label` or `LABEL`
 - Primary interactive styles: `.ghost-link` (text + arrow) and `.ghost-pill` (1px Bone outline,
   inverts to Bone fill on hover). No filled color buttons except destructive risk actions
-- Landing hero: iridescent bank card (chip, masked PAN, cardholder) with a scoring sweep, a FLAGGED
-  transaction stamp (risk 94). The card rig sways (.card-sway) and the ink headline copy inside it runs
-  the mirrored rotation (.card-counter) about the same pivot so it stays registered with the page copy;
-  keep both keyframes in sync. Hero publishes --sw/--sh via ResizeObserver for that geometry; and a live transaction tape
-  marquee (flagged rows in risk red). No circles, spheres or ring ornaments
+- Layout: every landing section sits on one 12-column grid (`.wrap` 1400px column + `.g12`, 19px gutter).
+  Shared column starts: col 1 = index labels, col 2 = section labels and row headings, col 7 = supporting
+  copy. Dashboard pages use a 24px gutter, 76px page header, 46px panel headers and 19px grid gaps
+- Landing hero: headline (cols 1-8) and iridescent bank card + live scoring panel (cols 9-12, `HeroCard`).
+  Hero label top aligns with the card top, headline baseline with the panel bottom. The card floats, tilts
+  toward the pointer and cycles sample transactions (score counts up, verdict FLAGGED/REVIEW/CLEAR).
+  A transaction tape marquee runs under the hero. No circles, spheres or ring ornaments
+- Motion: line-mask headline reveals, hairlines that draw in, count-up numbers (`CountUp`), scroll progress
+  bar, workflow progress line, dashboard `.rise` / `.rise-list` entrance stagger. All motion respects
+  prefers-reduced-motion
 - Landing sections: `(NN)` index label + hairline, 76-119px vertical rhythm
 
 ## ML Models

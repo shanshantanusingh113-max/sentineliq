@@ -2,27 +2,31 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { motion, type Variants } from 'framer-motion'
-import { C, IRIDESCENT, LABEL } from '@/lib/tokens'
+import { motion, useScroll, useSpring, useTransform, type Variants } from 'framer-motion'
+import { C, LABEL } from '@/lib/tokens'
+import Logo from '@/components/Logo'
+import HeroCard from '@/components/landing/HeroCard'
+import CountUp from '@/components/CountUp'
 
-const MAX = 1400
-const GUTTER = 'clamp(16px, 4vw, 46px)'
+/* Layout: every section sits on one 12-column grid (.g12, 19px gutter) inside a 1400px column.
+   Shared column starts - 1 (labels / headings), 7 (supporting copy) - line up down the page. */
+const EASE = [0.16, 1, 0.3, 1] as const
 
 const reveal: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } },
+  hidden: { opacity: 0, y: 28 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: EASE } },
 }
 const stagger: Variants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.09 } },
+  visible: { transition: { staggerChildren: 0.08 } },
 }
 
 const HEADLINE = ['Insider', 'threats,', 'caught before', 'the damage.']
 
 const STATS = [
-  { value: '$19.5M', unit: 'per year', label: 'Average insider risk cost per organisation (Ponemon, 2026)' },
-  { value: '67', unit: 'days', label: 'Average time to contain an insider incident (Ponemon, 2026)' },
-  { value: '0.4%', unit: 'FP rate', label: 'False positive rate on the 3-model ensemble' },
+  { to: 19.5, decimals: 1, prefix: '$', suffix: 'M', unit: 'Per year', label: 'Average insider risk cost per organisation (Ponemon, 2026)' },
+  { to: 67, decimals: 0, prefix: '', suffix: '', unit: 'Days', label: 'Average time to contain an insider incident (Ponemon, 2026)' },
+  { to: 0.4, decimals: 1, prefix: '', suffix: '%', unit: 'FP rate', label: 'False positive rate on the 3-model ensemble' },
 ]
 
 const STACK = [
@@ -39,65 +43,35 @@ const SHAP_MOCK = [
 ]
 
 const CAPABILITIES = [
-  {
-    n: '01',
-    title: 'Per-user baselines',
-    tag: 'Behaviour',
-    desc: 'Each employee is scored against their own 30-day history, not a generic role profile. Off-hours logins, download volumes and cross-department queries are measured against what that specific user actually does.',
-    visual: 'baseline' as const,
-  },
-  {
-    n: '02',
-    title: 'Ensemble scoring',
-    tag: 'Models',
-    desc: 'Isolation Forest, an LSTM Autoencoder and XGBoost score every event in parallel. When the models disagree, the disagreement itself is surfaced to the analyst next to the final risk score.',
-    visual: 'ensemble' as const,
-  },
-  {
-    n: '03',
-    title: 'Explainable alerts',
-    tag: 'SHAP',
-    desc: 'Every alert ships with feature attribution. Analysts see which behavioural signals drove the score, by how much, measured against the user\'s own baseline. No black-box anomaly flags.',
-    visual: 'shap' as const,
-  },
-  {
-    n: '04',
-    title: 'Investigator view',
-    tag: 'Casework',
-    desc: 'One click opens the full evidence package: risk score, SHAP explanation, 30 days of history, peer comparison against same-role employees and every linked prior incident.',
-    visual: 'case' as const,
-  },
+  { n: '01', title: 'Per-user baselines', tag: 'Behaviour', visual: 'baseline' as const,
+    desc: 'Each employee is scored against their own 30-day history, not a generic role profile. Off-hours logins, download volumes and cross-department queries are measured against what that user actually does.' },
+  { n: '02', title: 'Ensemble scoring', tag: 'Models', visual: 'ensemble' as const,
+    desc: 'Isolation Forest, an LSTM Autoencoder and XGBoost score every event in parallel. When the models disagree, the disagreement itself is surfaced to the analyst next to the final risk score.' },
+  { n: '03', title: 'Explainable alerts', tag: 'SHAP', visual: 'shap' as const,
+    desc: 'Every alert ships with feature attribution. Analysts see which behavioural signals drove the score and by how much, measured against the user\'s own baseline.' },
+  { n: '04', title: 'Investigator view', tag: 'Casework', visual: 'case' as const,
+    desc: 'One click opens the full evidence package: risk score, SHAP explanation, 30 days of history, peer comparison against same-role employees and every linked prior incident.' },
 ]
 
 const WORKFLOW = [
-  { n: '01', title: 'Detect', desc: 'Every action is encoded into 8 rolling-window features and scored by all three models. The ensemble returns a single 0-100 risk score within milliseconds.' },
+  { n: '01', title: 'Detect', desc: 'Every action is encoded into 8 rolling-window features and scored by all three models. The ensemble returns a 0-100 risk score within milliseconds.' },
   { n: '02', title: 'Surface', desc: 'When the score breaches threshold, an alert lands on the queue with a one-line summary: who, what event, and how risky.' },
   { n: '03', title: 'Explain', desc: 'The case view shows 30-day risk history, SHAP attribution, individual model scores and peer comparison against same-role staff.' },
   { n: '04', title: 'Decide', desc: 'Resolve or escalate in one action. Every analyst label feeds active learning, so XGBoost improves with each decision.' },
 ]
 
 const ENVIRONMENTS = [
-  {
-    title: 'Banking and fintech',
-    desc: 'Tellers, treasury desks and payment operators hold access that can move money in a single action. Every transaction burst, cross-desk query and bulk export is scored against that employee\'s own baseline.',
-    tags: ['Off-hours core banking access', 'Bulk customer record downloads', 'Transaction velocity spikes'],
-  },
-  {
-    title: 'Privileged IT and admin',
-    desc: 'Admins and service accounts are the highest-value target for insider abuse. Privilege escalation, account tampering and unusual device or location changes are flagged the moment they happen.',
-    tags: ['Privilege escalation', 'Account modification', 'Device and location anomalies'],
-  },
-  {
-    title: 'Compliance and audit',
-    desc: 'Every alert maps to a MITRE ATT&CK technique. Case files carry the full event chain, SHAP evidence and analyst labels, packaged for regulator or internal audit handoff.',
-    tags: ['T1078 Valid Accounts', 'T1530 Data from Cloud Storage', 'T1087 Account Discovery'],
-  },
-  {
-    title: 'Security operations',
-    desc: 'Alerts arrive pre-explained with risk score, top SHAP drivers, behavioural history and peer comparison. Analysts triage in seconds instead of hours of manual correlation.',
-    tags: ['Ensemble-scored alerts', 'JSON evidence export', 'Kill-chain case clustering'],
-  },
+  { title: 'Banking and fintech', tags: ['Off-hours core banking access', 'Bulk customer record downloads', 'Transaction velocity spikes'],
+    desc: 'Tellers, treasury desks and payment operators hold access that can move money in a single action. Every transaction burst, cross-desk query and bulk export is scored against that employee\'s own baseline.' },
+  { title: 'Privileged IT and admin', tags: ['Privilege escalation', 'Account modification', 'Device and location anomalies'],
+    desc: 'Admins and service accounts are the highest-value target for insider abuse. Privilege escalation, account tampering and unusual device or location changes are flagged the moment they happen.' },
+  { title: 'Compliance and audit', tags: ['T1078 Valid Accounts', 'T1530 Data from Cloud Storage', 'T1087 Account Discovery'],
+    desc: 'Every alert maps to a MITRE ATT&CK technique. Case files carry the full event chain, SHAP evidence and analyst labels, packaged for regulator or internal audit handoff.' },
+  { title: 'Security operations', tags: ['Ensemble-scored alerts', 'JSON evidence export', 'Kill-chain case clustering'],
+    desc: 'Alerts arrive pre-explained with risk score, top SHAP drivers, behavioural history and peer comparison. Analysts triage in seconds instead of hours of manual correlation.' },
 ]
+
+const GITHUB = 'https://github.com/TeamSigmoidIdea20/sentineliq'
 
 /* ------------------------------------------------------------------ */
 
@@ -105,15 +79,45 @@ function Label({ children, style }: { children: React.ReactNode; style?: React.C
   return <p style={{ ...LABEL, margin: 0, ...style }}>{children}</p>
 }
 
+// Index label + title on a hairline that draws itself in from the left.
 function SectionHead({ index, label, right }: { index: string; label: string; right?: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 19, borderTop: `1px solid ${C.border}`, paddingTop: 15, marginBottom: 76 }}>
-      <div style={{ display: 'flex', gap: 30 }}>
-        <Label>({index})</Label>
-        <Label style={{ color: C.textPrimary }}>{label}</Label>
-      </div>
-      {right}
-    </div>
+    <motion.div
+      initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }}
+      className="g12" style={{ position: 'relative', alignItems: 'center', paddingTop: 15, marginBottom: 76 }}
+    >
+      <motion.span
+        aria-hidden="true"
+        variants={{ hidden: { scaleX: 0 }, visible: { scaleX: 1, transition: { duration: 1.1, ease: EASE } } }}
+        style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1, background: C.border, transformOrigin: 'left' }}
+      />
+      <motion.div variants={reveal} className="sh-index" style={{ gridColumn: '1 / 2' }}><Label>({index})</Label></motion.div>
+      <motion.div variants={reveal} className="sh-label" style={{ gridColumn: '2 / 7' }}><Label style={{ color: C.textPrimary }}>{label}</Label></motion.div>
+      {right && <motion.div variants={reveal} style={{ gridColumn: '7 / 13', justifySelf: 'end' }}>{right}</motion.div>}
+    </motion.div>
+  )
+}
+
+// Display heading that rises in line by line behind a mask.
+function MaskLines({ lines, delay = 0, inView = false, as = 'h2', style }: { lines: string[]; delay?: number; inView?: boolean; as?: 'h1' | 'h2'; style?: React.CSSProperties }) {
+  const Tag = as
+  return (
+    <Tag style={{ margin: 0, fontWeight: 400, lineHeight: 0.8, letterSpacing: '0.013em', textTransform: 'uppercase', ...style }}>
+      {lines.map((line, i) => (
+        <span key={line} style={{ display: 'block', overflow: 'hidden', paddingBottom: '0.05em' }}>
+          <motion.span
+            style={{ display: 'block' }}
+            initial={{ y: '105%' }}
+            {...(inView
+              ? { whileInView: { y: 0 }, viewport: { once: true, margin: '-60px' } }
+              : { animate: { y: 0 } })}
+            transition={{ duration: 0.95, delay: delay + i * 0.08, ease: EASE }}
+          >
+            {line}
+          </motion.span>
+        </span>
+      ))}
+    </Tag>
   )
 }
 
@@ -196,7 +200,7 @@ function CapabilityVisual({ kind }: { kind: 'baseline' | 'ensemble' | 'shap' | '
   }
 
   return (
-    <div style={{ border: `1px solid ${C.border}`, background: C.bg }}>
+    <div style={{ margin: -30 }}>
       <div style={{ padding: '15px 19px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 15 }}>
         <div>
           <span style={{ ...LABEL, color: C.critical }}>Critical</span>
@@ -217,16 +221,6 @@ function CapabilityVisual({ kind }: { kind: 'baseline' | 'ensemble' | 'shap' | '
   )
 }
 
-// Hero card geometry. The section publishes its measured size as --sw / --sh so the
-// ink copy can sit INSIDE the card, counter-rotated, and stay registered with the page copy.
-const SW = 'var(--sw, 100vw)'
-const SH = 'var(--sh, 100svh)'
-const CARD_W = 'clamp(280px, 34vw, 500px)'
-const CARD_H = `calc(${CARD_W} / 1.586)`
-const CARD_R = 22
-// card's top-left inside the hero: right edge on the 1400px content column, centre at 31% height
-const CARD_L = `(${SW} - max(0px, (${SW} - ${MAX}px) / 2) - ${GUTTER} - ${CARD_W})`
-const CARD_T = `(${SH} * 0.31 - ${CARD_H} / 2)`
 
 const TAPE = [
   { id: 'TXN-8F21', kind: 'Wire', amt: '$48,200.00', who: 'J. Sterling', where: 'Lagos', at: '02:14', score: 94 },
@@ -242,7 +236,7 @@ const TAPE = [
 function TransactionTape() {
   const rows = [...TAPE, ...TAPE]
   return (
-    <div aria-hidden="true" style={{ position: 'relative', flexShrink: 0, borderTop: `1px solid ${C.border}`, overflow: 'hidden', height: 46, display: 'flex', alignItems: 'center', background: C.bg, zIndex: 3 }}>
+    <div aria-hidden="true" style={{ position: 'relative', flexShrink: 0, borderTop: `1px solid ${C.border}`, overflow: 'hidden', height: 46, display: 'flex', alignItems: 'center', background: C.bg }}>
       <div className="tape-track" style={{ display: 'flex', whiteSpace: 'nowrap' }}>
         {rows.map((t, i) => {
           const flagged = t.score >= 65
@@ -263,128 +257,33 @@ function TransactionTape() {
   )
 }
 
-function CardFace() {
-  const ink = C.onInk
-  const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)', color: ink }
+
+/* ------------------------------------------------------------------ */
+
+function Workflow() {
+  const ref = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 85%', 'end 55%'] })
+  const progress = useSpring(scrollYProgress, { stiffness: 90, damping: 24 })
+  const step = useTransform(progress, v => Math.min(3, Math.floor(v * 4.2)))
+  const [active, setActive] = useState(-1)
+  useEffect(() => step.on('change', v => setActive(v)), [step])
+
   return (
-    <div style={{ position: 'absolute', inset: 0, padding: 'clamp(18px, 2.2vw, 30px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: ink }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <span style={{ fontSize: 'clamp(11px, 1vw, 15px)', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Bank_Corp_01</span>
-        {/* contactless */}
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.4" strokeLinecap="round">
-          <path d="M8.5 7.5a6 6 0 010 9" /><path d="M12 5a9.5 9.5 0 010 14" /><path d="M15.5 2.5a13 13 0 010 19" />
-        </svg>
-      </div>
-      {/* chip */}
-      <svg width="clamp(40px, 4.4vw, 58px)" viewBox="0 0 58 44" style={{ width: 'clamp(40px, 4.4vw, 58px)', height: 'auto' }} fill="none" stroke={ink} strokeWidth="1.3">
-        <rect x="0.65" y="0.65" width="56.7" height="42.7" rx="7" />
-        <path d="M0.65 15h18M0.65 29h18M39.35 15h18M39.35 29h18M19 0.65v42.7M39 0.65v42.7M19 22h20" />
-      </svg>
-      <div>
-        <p style={{ ...mono, margin: '0 0 12px', fontSize: 'clamp(15px, 1.9vw, 28px)', letterSpacing: '0.12em' }}>4532 &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; 0947</p>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div>
-            <span style={{ display: 'block', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.7 }}>Cardholder</span>
-            <span style={{ fontSize: 'clamp(11px, 1vw, 15px)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>J. Sterling - Treasury</span>
+    <div ref={ref} className="g12 steps-grid" style={{ position: 'relative', paddingTop: 30 }}>
+      <div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1, background: C.border }} />
+      <motion.div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1, background: C.textPrimary, scaleX: progress, transformOrigin: 'left' }} />
+      {WORKFLOW.map((s, i) => {
+        const on = active >= i
+        return (
+          <div key={s.n} className="step" style={{ gridColumn: `${i * 3 + 1} / span 3`, position: 'relative', paddingRight: 19 }}>
+            <span aria-hidden="true" className="step-dot" style={{ position: 'absolute', left: 0, top: -34, width: 7, height: 7, background: on ? C.textPrimary : C.bg, border: `1px solid ${on ? C.textPrimary : C.borderStrong}`, transition: 'all 0.4s' }} />
+            <span style={{ display: 'block', fontSize: 76, lineHeight: 0.8, letterSpacing: '0.013em', color: on ? C.textPrimary : C.textFaint, transition: 'color 0.5s' }}>{s.n}</span>
+            <p style={{ margin: '76px 0 15px', fontSize: 34, lineHeight: 1, letterSpacing: '0.006em', textTransform: 'uppercase' }}>{s.title}</p>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.4, color: C.textMuted, maxWidth: 300 }}>{s.desc}</p>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ display: 'block', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.7 }}>Valid thru</span>
-            <span style={{ ...mono, fontSize: 'clamp(11px, 1vw, 15px)' }}>09/29</span>
-          </div>
-        </div>
-      </div>
-      {/* scoring sweep */}
-      <div className="card-scan" />
+        )
+      })}
     </div>
-  )
-}
-
-function FlagStamp() {
-  return (
-    <motion.div
-      aria-hidden="true"
-      className="hero-stamp"
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 1.1 }}
-      style={{
-        position: 'absolute', zIndex: 4,
-        right: 0,
-        top: -44,
-        width: 240, background: C.bg, border: `1px solid ${C.border}`,
-        fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 15px', borderBottom: `1px solid ${C.border}` }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: C.critical }}>
-          <span className="animate-pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: C.critical }} />
-          Flagged
-        </span>
-        <span style={{ color: C.textMuted }}>TXN-8F21</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '12px 15px' }}>
-        <div style={{ color: C.textMuted, lineHeight: 1.6 }}>
-          <div style={{ color: C.textPrimary }}>Wire $48,200</div>
-          <div>02:14 - Lagos</div>
-        </div>
-        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 46, lineHeight: 0.8, color: C.critical, letterSpacing: '0.013em' }}>94</span>
-      </div>
-    </motion.div>
-  )
-}
-
-function HeroCopy({ wrap, ink = false }: { wrap: React.CSSProperties; ink?: boolean }) {
-  const fg = ink ? C.onInk : C.textPrimary
-  const sub = ink ? C.onInk : C.textMuted
-  return (
-    <div className="hero-copy" style={{ ...wrap, width: '100%', position: 'relative', paddingTop: 112, paddingBottom: 46 }}>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} style={{ display: 'flex', gap: 30, marginBottom: 46 }}>
-        <Label style={{ color: sub }}>(00)</Label>
-        <Label style={{ color: fg }}>AI-driven insider threat detection</Label>
-      </motion.div>
-
-      {ink ? (
-        <div style={{ margin: 0, fontSize: HERO_SIZE, fontWeight: 400, lineHeight: 0.8, letterSpacing: '0.013em', textTransform: 'uppercase', color: fg }}>
-          <HeadlineLines />
-        </div>
-      ) : (
-        <h1 style={{ margin: 0, fontSize: HERO_SIZE, fontWeight: 400, lineHeight: 0.8, letterSpacing: '0.013em', textTransform: 'uppercase', color: fg }}>
-          <HeadlineLines />
-        </h1>
-      )}
-
-      <motion.div
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.7 }}
-        className="intro-grid"
-        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 19, marginTop: 76, borderTop: `1px solid ${ink ? C.onInk : C.border}`, paddingTop: 19 }}
-      >
-        <Label style={{ color: sub }}>Banks and fintech - flagship use case</Label>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.4, color: sub, maxWidth: 460 }}>
-          A behavioural fingerprint for every privileged user, scored in real time by a 3-model ensemble. Deviations reach the security team in seconds.
-        </p>
-      </motion.div>
-    </div>
-  )
-}
-
-const HERO_SIZE = 'clamp(52px, 9.4vw, 140px)'
-
-function HeadlineLines() {
-  return (
-    <>
-      {HEADLINE.map((line, i) => (
-        <span key={line} style={{ display: 'block', overflow: 'hidden', paddingBottom: '0.04em' }}>
-          <motion.span
-            initial={{ y: '105%' }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.9, delay: 0.15 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-            style={{ display: 'block' }}
-          >
-            {line}
-          </motion.span>
-        </span>
-      ))}
-    </>
   )
 }
 
@@ -392,21 +291,8 @@ function HeadlineLines() {
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
-  const heroRef = useRef<HTMLElement>(null)
-
-  // Publish the hero's exact size so the card's inner ink copy can mirror the page layout
-  useEffect(() => {
-    const el = heroRef.current
-    if (!el) return
-    const apply = () => {
-      el.style.setProperty('--sw', `${el.clientWidth}px`)
-      el.style.setProperty('--sh', `${el.clientHeight}px`)
-    }
-    apply()
-    const ro = new ResizeObserver(apply)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
+  const { scrollYProgress } = useScroll()
+  const bar = useSpring(scrollYProgress, { stiffness: 140, damping: 30 })
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -415,105 +301,84 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const wrap: React.CSSProperties = { maxWidth: MAX, margin: '0 auto', padding: `0 ${GUTTER}` }
-
   return (
-    <div style={{ background: C.bg, color: C.textPrimary, minHeight: '100vh', overflowX: 'hidden' }}>
+    <div style={{ background: C.bg, color: C.textPrimary, minHeight: '100vh', overflowX: 'clip' }}>
+
+      {/* Scroll progress */}
+      <motion.div aria-hidden="true" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 1, background: C.textPrimary, scaleX: bar, transformOrigin: 'left', zIndex: 60 }} />
 
       {/* ── Top bar ── */}
-      <header style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20 }}>
-        <div style={{ ...wrap, height: 76, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: C.textPrimary }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" aria-hidden="true" style={{ height: 22, width: 'auto', display: 'block' }} />
-            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>SentinelIQ.</span>
+      <header style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        background: scrolled ? 'rgba(10,10,9,0.86)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(14px)' : 'none',
+        borderBottom: `1px solid ${scrolled ? C.border : 'transparent'}`,
+        transition: 'background-color 0.3s, border-color 0.3s',
+      }}>
+        <div className="wrap g12 keep" style={{ height: 76, alignItems: 'center' }}>
+          <Link href="/" aria-label="SentinelIQ home" style={{ gridColumn: '1 / 4', textDecoration: 'none' }}>
+            <Logo />
           </Link>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 30 }}>
-            <div className="hide-md" style={{ display: 'flex', gap: 30 }}>
-              {[['Capabilities', '#capabilities'], ['Workflow', '#workflow'], ['Coverage', '#coverage']].map(([label, href]) => (
-                <a key={href} href={href} className="landing-nav-link" style={{ ...LABEL, color: C.textMuted }}>{label}</a>
-              ))}
-            </div>
-            <Link href="/dashboard" className="ghost-pill">Live demo <span aria-hidden="true">→</span></Link>
+          <nav className="hide-md" style={{ gridColumn: '7 / 11', display: 'flex', gap: 30 }}>
+            {[['Capabilities', '#capabilities'], ['Workflow', '#workflow'], ['Coverage', '#coverage']].map(([label, href]) => (
+              <a key={href} href={href} className="landing-nav-link" style={{ ...LABEL, color: C.textMuted }}>{label}</a>
+            ))}
           </nav>
+          <div style={{ gridColumn: '11 / 13', justifySelf: 'end' }}>
+            <Link href="/dashboard" className="ghost-pill">Live demo <span aria-hidden="true">→</span></Link>
+          </div>
         </div>
       </header>
 
       {/* ── Hero ── */}
-      <section ref={heroRef} style={{ position: 'relative', minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', overflow: 'hidden' }}>
-        {/* Bone layer */}
-        <HeroCopy wrap={wrap} />
-
-        {/* Iridescent payment card - the single gradient moment. The rig sways; the ink copy
-            inside the card runs the mirrored animation around the same pivot, so the headline
-            stays put while the card rotates beneath it. */}
-        <motion.div
-          aria-hidden="true"
-          className="hero-card"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-          style={{
-            position: 'absolute', zIndex: 2, pointerEvents: 'none',
-            left: `calc(${CARD_L})`, top: `calc(${CARD_T})`, width: CARD_W, height: CARD_H,
-          }}
-        >
-          <div className="card-sway" style={{ position: 'absolute', inset: 0 }}>
-            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: CARD_R, background: IRIDESCENT, isolation: 'isolate' }}>
-              <CardFace />
-              <div
-                className="card-counter hero-ink"
-                style={{
-                  position: 'absolute',
-                  left: `calc(-1 * ${CARD_L})`, top: `calc(-1 * ${CARD_T})`,
-                  width: SW, height: SH,
-                  transformOrigin: `calc(${CARD_L} + ${CARD_W} / 2) calc(${CARD_T} + ${CARD_H} / 2)`,
-                  display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 46,
-                }}
-              >
-                <HeroCopy wrap={wrap} ink />
-              </div>
+      <section style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column' }}>
+        <div className="wrap" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 140, paddingBottom: 46 }}>
+          <div className="g12" style={{ alignItems: 'end', rowGap: 46 }}>
+            <div className="hero-copy-col" style={{ gridColumn: '1 / 9', alignSelf: 'stretch', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="g12 keep hero-label" style={{ gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', marginBottom: 46, paddingTop: 4 }}>
+                <Label>(00)</Label>
+                <Label style={{ gridColumn: '2 / 9', color: C.textPrimary }}>AI-driven insider threat detection</Label>
+              </motion.div>
+              <div className="hero-h1"><MaskLines as="h1" lines={HEADLINE} delay={0.1} style={{ fontSize: 'clamp(44px, 6.1vw, 92px)', whiteSpace: 'nowrap', marginBottom: -6 }} /></div>
             </div>
-            <FlagStamp />
+            <div className="hero-card-col" style={{ gridColumn: '9 / 13' }}>
+              <HeroCard />
+            </div>
           </div>
-        </motion.div>
 
-        <TransactionTape />
-
-        {/* Scroll indicator */}
-        <div
-          aria-hidden="true"
-          className="hide-md"
-          style={{
-            position: 'fixed', right: `calc(max(0px, (100vw - ${MAX}px) / 2) + ${GUTTER})`, bottom: 76, zIndex: 30,
-            ...LABEL, color: C.textPrimary,
-            display: 'flex', alignItems: 'center', gap: 8,
-            opacity: scrolled ? 0 : 1, transition: 'opacity 0.3s', pointerEvents: 'none',
-          }}
-        >
-          Scroll <span className="scroll-arrow">↓</span>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.75, ease: EASE }}
+            className="g12" style={{ position: 'relative', marginTop: 76, paddingTop: 19 }}
+          >
+            <motion.span aria-hidden="true" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1.2, delay: 0.6, ease: EASE }}
+              style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1, background: C.border, transformOrigin: 'left' }} />
+            <div style={{ gridColumn: '1 / 7' }}>
+              <Label>Banks and fintech - flagship use case</Label>
+            </div>
+            <p style={{ gridColumn: '7 / 12', margin: 0, fontSize: 15, lineHeight: 1.4, color: C.textMuted }}>
+              A behavioural fingerprint for every privileged user, scored in real time by a 3-model ensemble. Deviations reach the security team in seconds.
+            </p>
+            <div className="hide-md" style={{ gridColumn: '12 / 13', justifySelf: 'end', alignSelf: 'end', ...LABEL, color: C.textPrimary, opacity: scrolled ? 0 : 1, transition: 'opacity 0.3s', whiteSpace: 'nowrap' }}>
+              Scroll <span className="scroll-arrow" aria-hidden="true">↓</span>
+            </div>
+          </motion.div>
         </div>
+        <TransactionTape />
       </section>
 
-      {/* ── Intro block ── */}
+      {/* ── About ── */}
       <section style={{ padding: '119px 0 76px' }}>
-        <div style={wrap}>
+        <div className="wrap">
           <SectionHead index="01" label="About the platform" />
-          <motion.div
-            variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }}
-            className="intro-grid"
-            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 19 }}
-          >
-            <motion.div variants={reveal}>
-              <p style={{ margin: '0 0 30px', fontSize: 15, lineHeight: 1.4, letterSpacing: '0.05em', textTransform: 'uppercase', maxWidth: 420 }}>
+          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} className="g12">
+            <motion.div variants={reveal} style={{ gridColumn: '1 / 6' }}>
+              <p style={{ margin: '0 0 30px', fontSize: 15, lineHeight: 1.4, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 We build a baseline for every privileged user, then watch for the moment behaviour stops matching it.
               </p>
-              <Link href="/dashboard" className="ghost-link">
-                Open the dashboard <span className="arrow" aria-hidden="true">→</span>
-              </Link>
+              <Link href="/dashboard" className="ghost-link">Open the dashboard <span className="arrow" aria-hidden="true">→</span></Link>
             </motion.div>
-            <motion.div variants={reveal}>
-              <p style={{ margin: '0 0 19px', fontSize: 'clamp(22px, 2.6vw, 34px)', lineHeight: 1.1, letterSpacing: '0.006em' }}>
+            <motion.div variants={reveal} style={{ gridColumn: '7 / 13' }}>
+              <p style={{ margin: '0 0 30px', fontSize: 'clamp(22px, 2.4vw, 34px)', lineHeight: 1.15, letterSpacing: '0.006em' }}>
                 SentinelIQ scores every action as it happens. When a teller exports a customer book at 2am, or an admin grants themselves a role they have never held, the analyst knows within seconds - not after data or money has left the building.
               </p>
               <p style={{ margin: 0, fontSize: 18, lineHeight: 1.4, color: C.textMuted, maxWidth: 560 }}>
@@ -526,71 +391,52 @@ export default function LandingPage() {
 
       {/* ── Stats ── */}
       <section style={{ padding: '0 0 119px' }}>
-        <div style={wrap}>
-          <motion.div
-            variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }}
-            className="stats-row"
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}
-          >
-            {STATS.map(({ value, unit, label }, i) => (
-              <motion.div key={label} variants={reveal}
-                style={{ padding: '46px 30px 30px', paddingLeft: i === 0 ? 0 : 30, borderRight: i < STATS.length - 1 ? `1px solid ${C.border}` : 'none' }}
-              >
-                <Label style={{ marginBottom: 30 }}>{unit}</Label>
-                <p style={{ margin: '0 0 30px', fontSize: 'clamp(52px, 6vw, 103px)', lineHeight: 0.8, letterSpacing: '0.013em', color: C.textPrimary }}>{value}</p>
-                <p style={{ margin: 0, fontSize: 15, lineHeight: 1.4, color: C.textMuted, maxWidth: 300 }}>{label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
+        <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} className="wrap g12 stats-row">
+          {STATS.map((s, i) => (
+            <motion.div key={s.label} variants={reveal} style={{ gridColumn: `${i * 4 + 1} / span 4`, position: 'relative', paddingTop: 19 }}>
+              <span aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1, background: C.border }} />
+              <Label style={{ marginBottom: 46 }}>{s.unit}</Label>
+              <p style={{ margin: '0 0 30px', fontSize: 'clamp(56px, 6.4vw, 103px)', lineHeight: 0.8, letterSpacing: '0.013em' }}>
+                <CountUp to={s.to} decimals={s.decimals} prefix={s.prefix} suffix={s.suffix} duration={1.8} delay={i * 0.12} />
+              </p>
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.4, color: C.textMuted, maxWidth: 300 }}>{s.label}</p>
+            </motion.div>
+          ))}
+        </motion.div>
       </section>
 
-      {/* ── Stack grid (2 x 5) ── */}
+      {/* ── Built on (2 x 5) ── */}
       <section style={{ padding: '0 0 119px' }}>
-        <div style={wrap}>
-          <SectionHead index="02" label="Built on" />
-          <motion.div
-            variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }}
-            className="hairline-grid stack-grid"
-            style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}
-          >
+        <div className="wrap">
+          <SectionHead index="02" label="Built on" right={<Label>10 components</Label>} />
+          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} className="hairline-grid stack-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
             {STACK.map((name, i) => (
-              <motion.div key={name} variants={reveal} className="cell-hover"
-                style={{ background: C.card, aspectRatio: '1.6 / 1', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 19 }}
-              >
+              <motion.div key={name} variants={reveal} className="cell-hover stack-cell"
+                style={{ background: C.card, aspectRatio: '1.6 / 1', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 19 }}>
                 <span style={{ ...LABEL, position: 'absolute', top: 15, left: 15, fontSize: 10, color: C.textFaint }}>{String(i + 1).padStart(2, '0')}</span>
-                <span style={{ fontSize: 'clamp(15px, 1.5vw, 22px)', letterSpacing: '0.006em', textAlign: 'center' }}>{name}</span>
+                <span className="stack-name" style={{ fontSize: 'clamp(15px, 1.4vw, 22px)', letterSpacing: '0.006em', textAlign: 'center' }}>{name}</span>
               </motion.div>
             ))}
           </motion.div>
         </div>
       </section>
 
-      {/* ── Capabilities (featured work cards) ── */}
-      <section id="capabilities" style={{ padding: '0 0 119px' }}>
-        <div style={wrap}>
-          <SectionHead
-            index="03"
-            label="Capabilities"
-            right={<Link href="/dashboard" className="ghost-pill quiet">All capabilities <span aria-hidden="true">→</span></Link>}
-          />
-          <h2 style={{ margin: '0 0 76px', fontSize: 'clamp(40px, 6.2vw, 103px)', fontWeight: 400, lineHeight: 0.8, letterSpacing: '0.013em', textTransform: 'uppercase', maxWidth: 1100 }}>
-            Built around the analyst.
-          </h2>
-          <motion.div
-            variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }}
-            className="work-grid"
-            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 19 }}
-          >
-            {CAPABILITIES.map(cap => (
-              <motion.article key={cap.n} variants={reveal} className="grid-paper"
-                style={{ padding: 30, display: 'flex', flexDirection: 'column', minHeight: 560, border: `1px solid ${C.border}` }}
-              >
+      {/* ── Capabilities ── */}
+      <section id="capabilities" style={{ padding: '0 0 119px', scrollMarginTop: 76 }}>
+        <div className="wrap">
+          <SectionHead index="03" label="Capabilities" right={<Link href="/dashboard" className="ghost-pill quiet">Open dashboard <span aria-hidden="true">→</span></Link>} />
+          <div className="g12" style={{ marginBottom: 76 }}>
+            <MaskLines inView lines={['Built around', 'the analyst.']} style={{ gridColumn: '1 / 13', fontSize: 'clamp(44px, 7.1vw, 103px)' }} />
+          </div>
+          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} className="g12 work-grid" style={{ rowGap: 19 }}>
+            {CAPABILITIES.map((cap, i) => (
+              <motion.article key={cap.n} variants={reveal} className="grid-paper cap-card"
+                style={{ gridColumn: i % 2 === 0 ? '1 / 7' : '7 / 13', padding: 30, display: 'flex', flexDirection: 'column', minHeight: 560, border: `1px solid ${C.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 30 }}>
                   <Label>({cap.n})</Label>
                   <Label>{cap.tag}</Label>
                 </div>
-                <h3 style={{ margin: '0 0 19px', fontSize: 'clamp(32px, 3.4vw, 46px)', fontWeight: 400, lineHeight: 1, letterSpacing: '0.006em' }}>{cap.title}</h3>
+                <h3 style={{ margin: '0 0 19px', fontSize: 'clamp(30px, 3.2vw, 46px)', fontWeight: 400, lineHeight: 1, letterSpacing: '0.006em' }}>{cap.title}</h3>
                 <p style={{ margin: '0 0 46px', fontSize: 15, lineHeight: 1.4, color: C.textMuted, maxWidth: 480 }}>{cap.desc}</p>
                 <div style={{ marginTop: 'auto', background: C.bg, border: `1px solid ${C.border}`, padding: 30 }}>
                   <CapabilityVisual kind={cap.visual} />
@@ -602,87 +448,68 @@ export default function LandingPage() {
       </section>
 
       {/* ── Workflow ── */}
-      <section id="workflow" style={{ padding: '0 0 119px' }}>
-        <div style={wrap}>
+      <section id="workflow" style={{ padding: '0 0 119px', scrollMarginTop: 76 }}>
+        <div className="wrap">
           <SectionHead index="04" label="Analyst workflow" right={<Label>Under 30 seconds</Label>} />
-          <motion.div
-            variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }}
-            className="hairline-grid steps-grid"
-            style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
-          >
-            {WORKFLOW.map(step => (
-              <motion.div key={step.n} variants={reveal} className="cell-hover" style={{ padding: 30, minHeight: 380, display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: 76, lineHeight: 0.8, color: C.textFaint, letterSpacing: '0.013em' }}>{step.n}</span>
-                <div style={{ marginTop: 119 }}>
-                  <p style={{ margin: '0 0 15px', fontSize: 34, lineHeight: 1, letterSpacing: '0.006em', textTransform: 'uppercase' }}>{step.title}</p>
-                  <p style={{ margin: 0, fontSize: 15, lineHeight: 1.4, color: C.textMuted }}>{step.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
+          <Workflow />
         </div>
       </section>
 
       {/* ── Coverage ── */}
-      <section id="coverage" style={{ padding: '0 0 119px' }}>
-        <div style={wrap}>
+      <section id="coverage" style={{ padding: '0 0 119px', scrollMarginTop: 76 }}>
+        <div className="wrap">
           <SectionHead index="05" label="Built for" />
-          <div>
-            {ENVIRONMENTS.map((env, i) => (
-              <motion.div key={env.title}
-                initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={reveal}
-                className="split-grid"
-                style={{
-                  display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 19, alignItems: 'baseline',
-                  padding: '30px 0 46px',
-                  borderTop: `1px solid ${C.border}`,
-                  borderBottom: i === ENVIRONMENTS.length - 1 ? `1px solid ${C.border}` : 'none',
-                }}
-              >
-                <Label>({String(i + 1).padStart(2, '0')})</Label>
-                <h3 style={{ margin: 0, fontSize: 'clamp(28px, 3vw, 46px)', fontWeight: 400, lineHeight: 1, letterSpacing: '0.006em' }}>{env.title}</h3>
-                <div>
-                  <p style={{ margin: '0 0 19px', fontSize: 18, lineHeight: 1.4, color: C.textMuted }}>{env.desc}</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {env.tags.map(t => (
-                      <span key={t} style={{ ...LABEL, color: C.textPrimary, border: `1px solid ${C.border}`, borderRadius: 10, padding: '5px 15px' }}>{t}</span>
-                    ))}
-                  </div>
+          {ENVIRONMENTS.map((env, i) => (
+            <motion.div key={env.title}
+              variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }}
+              className="g12 cov-row"
+              style={{ position: 'relative', padding: '30px 0 46px', borderBottom: i === ENVIRONMENTS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+              <motion.span aria-hidden="true" variants={{ hidden: { scaleX: 0 }, visible: { scaleX: 1, transition: { duration: 1, ease: EASE } } }}
+                style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1, background: C.border, transformOrigin: 'left' }} />
+              <motion.div variants={reveal} style={{ gridColumn: '1 / 2' }}>
+                <Label style={{ lineHeight: '46px' }}>({String(i + 1).padStart(2, '0')})</Label>
+              </motion.div>
+              <motion.h3 variants={reveal} style={{ gridColumn: '2 / 7', margin: 0, fontSize: 'clamp(28px, 3vw, 46px)', fontWeight: 400, lineHeight: 1, letterSpacing: '0.006em' }}>
+                {env.title}
+              </motion.h3>
+              <motion.div variants={reveal} style={{ gridColumn: '7 / 13' }}>
+                <p style={{ margin: '0 0 19px', fontSize: 18, lineHeight: 1.4, color: C.textMuted }}>{env.desc}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {env.tags.map(t => (
+                    <span key={t} className="tag" style={{ ...LABEL, color: C.textPrimary, border: `1px solid ${C.border}`, borderRadius: 10, padding: '5px 15px' }}>{t}</span>
+                  ))}
                 </div>
               </motion.div>
-            ))}
-          </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
       {/* ── CTA ── */}
-      <section style={{ position: 'relative', overflow: 'hidden', padding: '119px 0' }}>
-        <motion.div
-          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={reveal}
-          style={{ ...wrap, position: 'relative' }}
-        >
+      <section style={{ padding: '119px 0' }}>
+        <div className="wrap">
           <SectionHead index="06" label="The next incident" />
-          <h2 style={{ margin: '0 0 76px', fontSize: 'clamp(48px, 8vw, 128px)', fontWeight: 400, lineHeight: 0.8, letterSpacing: '0.013em', textTransform: 'uppercase', maxWidth: 1200 }}>
-            The next insider attack is already in progress.
-          </h2>
-          <div className="intro-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 19, alignItems: 'end' }}>
-            <div style={{ display: 'flex', gap: 19, flexWrap: 'wrap' }}>
+          <div className="g12" style={{ marginBottom: 76 }}>
+            <MaskLines inView lines={['The next insider', 'attack is already', 'in progress.']} style={{ gridColumn: '1 / 13', fontSize: 'clamp(48px, 8vw, 128px)' }} />
+          </div>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={reveal} className="g12" style={{ alignItems: 'end' }}>
+            <div style={{ gridColumn: '1 / 7', display: 'flex', gap: 19, flexWrap: 'wrap' }}>
               <Link href="/dashboard" className="ghost-pill">View live demo <span aria-hidden="true">→</span></Link>
-              <a href="https://github.com/TeamSigmoidIdea20/sentineliq" target="_blank" rel="noopener noreferrer" className="ghost-pill quiet">Source <span aria-hidden="true">↗</span></a>
+              <a href={GITHUB} target="_blank" rel="noopener noreferrer" className="ghost-pill quiet">Source <span aria-hidden="true">↗</span></a>
             </div>
-            <p style={{ margin: 0, fontSize: 18, lineHeight: 1.4, color: C.textMuted, maxWidth: 460 }}>
+            <p style={{ gridColumn: '7 / 12', margin: 0, fontSize: 18, lineHeight: 1.4, color: C.textMuted }}>
               SentinelIQ surfaces it before the damage is done.
             </p>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </section>
 
       {/* ── Footer ── */}
       <footer style={{ borderTop: `1px solid ${C.border}` }}>
-        <div style={{ ...wrap, padding: `30px ${GUTTER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 19 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>SentinelIQ.</span>
-          <div style={{ display: 'flex', gap: 30, alignItems: 'center' }}>
-            <a href="https://github.com/TeamSigmoidIdea20/sentineliq" target="_blank" rel="noopener noreferrer" className="landing-nav-link" style={{ ...LABEL }}>GitHub</a>
+        <div className="wrap g12 keep" style={{ paddingTop: 30, paddingBottom: 30, alignItems: 'center' }}>
+          <div style={{ gridColumn: '1 / 7' }}><Logo /></div>
+          <div style={{ gridColumn: '7 / 13', display: 'flex', gap: 30, alignItems: 'center', justifyContent: 'flex-end' }}>
+            <a href={GITHUB} target="_blank" rel="noopener noreferrer" className="landing-nav-link" style={{ ...LABEL }}>GitHub</a>
             <Link href="/dashboard" className="landing-nav-link" style={{ ...LABEL }}>Demo</Link>
             <Label>ISO 27001</Label>
           </div>

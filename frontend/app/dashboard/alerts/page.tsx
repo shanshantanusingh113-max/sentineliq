@@ -52,7 +52,7 @@ function AlertRow({ alert, selected, onClick, isRight }: {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        padding: '13px 18px', borderBottom: `1px solid ${C.border}`,
+        padding: '15px 24px 15px', paddingLeft: isRight && !selected ? 23 : 21, borderBottom: `1px solid ${C.border}`,
         cursor: 'pointer', transition: 'background 0.1s',
         background: selected ? C.hover : hov ? C.panel : 'transparent',
         borderLeft: isRight
@@ -351,7 +351,7 @@ export default function AlertsPage() {
           )}
 
           {!loading && alerts.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+            <div className="rise-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
               {alerts.map((a, i) => (
                 <AlertRow
                   key={a.id}

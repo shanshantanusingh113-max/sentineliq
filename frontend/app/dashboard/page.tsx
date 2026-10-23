@@ -211,7 +211,7 @@ export default function DashboardPage() {
                 </p>
                 <button
                   onClick={() => { setSelectedAlertId(newAlertNotif.id); setNewAlertNotif(null) }}
-                  style={{ fontSize: 11, color: C.textMuted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 0, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ fontSize: 11, color: C.textMuted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 10, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   View
                 </button>
@@ -254,16 +254,16 @@ export default function DashboardPage() {
               <div
                 role="alert"
                 style={{
-                  background: C.critical, padding: '10px 24px',
+                  background: C.criticalWash, padding: '0 24px', height: 46,
                   display: 'flex', alignItems: 'center', gap: 10,
-                  borderBottom: '1px solid rgba(255,255,255,0.1)',
+                  borderBottom: `1px solid ${C.border}`, borderLeft: `2px solid ${C.critical}`,
                 }}
               >
-                <AlertTriangle size={15} color={C.textPrimary} strokeWidth={2} style={{ flexShrink: 0 }} />
-                <p style={{ margin: 0, fontSize: 13, color: C.textPrimary, fontWeight: 500, flex: 1 }}>
+                <AlertTriangle size={15} color={C.critical} strokeWidth={2} style={{ flexShrink: 0 }} />
+                <p style={{ margin: 0, fontSize: 13, color: C.textPrimary, fontWeight: 400, flex: 1 }}>
                   Coordinated Activity Detected:{' '}
-                  <span style={{ fontWeight: 700 }}>{formatFraudType(cp.pattern)}</span>
-                  {' '}across <span style={{ fontWeight: 700 }}>{cp.users} users</span> in the {cp.window}.{' '}
+                  <span style={{ color: C.critical }}>{formatFraudType(cp.pattern)}</span>
+                  {' '}across <span>{cp.users} users</span> in the {cp.window}.{' '}
                   <Link
                     href={`/dashboard/alerts?fraud_type=${cp.pattern}`}
                     style={{ color: C.textPrimary, textDecoration: 'underline', fontSize: 13 }}
@@ -289,7 +289,7 @@ export default function DashboardPage() {
 
         <main style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Stat cards */}
-          <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 19 }}>
             <StatCard
               label="Users Monitored"
               value={stats?.users_monitored ?? '-'}
@@ -339,7 +339,7 @@ export default function DashboardPage() {
           )}
 
           {/* Feed + Recent alerts */}
-          <div className="feed-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16 }}>
+          <div className="feed-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 19 }}>
             <LiveFeed onAlertClick={setSelectedAlertId} />
 
             <div
@@ -349,11 +349,11 @@ export default function DashboardPage() {
               }}
             >
               <div style={{ height: 46, padding: '0 19px', flexShrink: 0, display: 'flex', alignItems: 'center', borderBottom: `1px solid ${C.border}` }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: 11, fontWeight: 400, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Recent Alerts
                 </span>
               </div>
-              <div style={{ flex: 1, overflowY: 'auto' }}>
+              <div className="rise-list" style={{ flex: 1, overflowY: 'auto' }}>
                 {alertsLoading
                   ? [...Array(5)].map((_, i) => (
                       <div key={i} style={{ height: 52, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10 }}>
@@ -407,7 +407,7 @@ export default function DashboardPage() {
           {/* Users table */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h2 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textPrimary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <h2 style={{ margin: 0, fontSize: 11, fontWeight: 400, color: C.textPrimary, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 Monitored Employees
               </h2>
               <span style={{ fontSize: 11, color: C.textMuted }}>{users.length} active</span>

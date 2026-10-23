@@ -250,7 +250,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
           {alert ? (
             <>
               <div style={{
-                width: 38, height: 38, borderRadius: '50%', background: scoreColor,
+                width: 38, height: 38, borderRadius: '50%', background: C.panel, border: `1px solid ${scoreColor}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 13, fontWeight: 700, color: C.textPrimary, flexShrink: 0,
               }}>
@@ -281,7 +281,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
             style={{
               background: 'none', border: `1px solid ${C.border}`, color: C.textMuted,
               cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '4px 9px',
-              borderRadius: 0, marginLeft: 4, flexShrink: 0,
+              borderRadius: 10, marginLeft: 4, flexShrink: 0,
             }}
           >×</button>
         </div>
@@ -462,7 +462,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
 
                 {/* Investigation Timeline */}
                 <div>
-                  <p style={{ margin: '0 0 14px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
+                  <p style={{ margin: '0 0 14px', fontSize: 11, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 400 }}>
                     Investigation Timeline
                     {timeline.length > 0 && (
                       <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 4 }}>· {timeline.length} events</span>
@@ -559,7 +559,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                       onClick={() => handleLabel(lbl)}
                       style={{
                         flex: 1, padding: '7px 0', fontSize: 11, fontWeight: 700,
-                        letterSpacing: '0.05em', cursor: 'pointer', borderRadius: 0,
+                        letterSpacing: '0.05em', cursor: 'pointer', borderRadius: 10,
                         border: `1px solid ${alert.label === lbl ? (lbl === 'TP' ? C.critical : C.low) : C.border}`,
                         background: alert.label === lbl ? (lbl === 'TP' ? 'rgba(220,38,38,0.12)' : 'rgba(22,163,74,0.12)') : 'transparent',
                         color: alert.label === lbl ? (lbl === 'TP' ? C.critical : C.low) : C.textMuted,
@@ -580,9 +580,9 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                         disabled={acting}
                         onClick={handleResolve}
                         style={{
-                          flex: 1, padding: '9px 0', fontSize: 11, fontWeight: 700,
-                          letterSpacing: '0.05em', cursor: 'pointer', borderRadius: 0,
-                          background: C.critical, border: 'none', color: C.textPrimary,
+                          flex: 1, padding: '9px 0', fontSize: 11, fontWeight: 400,
+                          letterSpacing: '0.05em', cursor: 'pointer', borderRadius: 10,
+                          background: 'transparent', border: `1px solid ${C.textPrimary}`, color: C.textPrimary,
                           opacity: acting ? 0.6 : 1,
                         }}
                       >MARK RESOLVED</button>
@@ -592,7 +592,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                         onClick={handleDismiss}
                         style={{
                           flex: 1, padding: '9px 0', fontSize: 11, fontWeight: 700,
-                          letterSpacing: '0.05em', cursor: 'pointer', borderRadius: 0,
+                          letterSpacing: '0.05em', cursor: 'pointer', borderRadius: 10,
                           background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted,
                           opacity: acting ? 0.6 : 1,
                         }}

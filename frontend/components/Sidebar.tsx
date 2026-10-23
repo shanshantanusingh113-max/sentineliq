@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { C } from '@/lib/tokens'
+import Logo from '@/components/Logo'
 
 const NAV = [
   { href: '/dashboard', label: 'Overview', icon: OverviewIcon },
@@ -32,20 +33,8 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div style={{ height: 76, padding: '0 20px', display: 'flex', alignItems: 'center', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 28, height: 28, overflow: 'hidden', flexShrink: 0 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/logo.png"
-                alt="SentinelIQ logo"
-                style={{ height: 28, width: 'auto', display: 'block', objectFit: 'cover', objectPosition: 'left center' }}
-              />
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              SentinelIQ.
-            </span>
-          </div>
+        <Link href="/" aria-label="SentinelIQ home" style={{ textDecoration: 'none' }}>
+          <Logo size={14} />
         </Link>
       </div>
 
@@ -64,7 +53,7 @@ export default function Sidebar() {
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <span style={{ flex: 1, textAlign: 'left' }}>Search…</span>
-          <kbd style={{ fontSize: 9, border: `1px solid ${C.border}`, borderRadius: 0, padding: '1px 4px', color: C.textMuted }}>⌘K</kbd>
+          <kbd style={{ fontSize: 9, border: `1px solid ${C.border}`, borderRadius: 10, padding: '1px 4px', color: C.textMuted }}>⌘K</kbd>
         </button>
       </div>
 

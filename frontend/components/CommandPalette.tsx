@@ -195,7 +195,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{
-                        width: 22, height: 22, borderRadius: '50%', background: color,
+                        width: 22, height: 22, borderRadius: '50%', background: C.panel, border: `1px solid ${color}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 9, fontWeight: 500, color: C.textPrimary, flexShrink: 0,
                       }}>

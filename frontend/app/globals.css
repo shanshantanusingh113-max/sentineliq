@@ -124,6 +124,23 @@ pre,
   opacity: 0.82;
 }
 
+/* ---------- Layout system ---------- */
+
+/* 1400px content column with the page gutter */
+.wrap {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(16px, 4vw, 46px);
+  padding-right: clamp(16px, 4vw, 46px);
+}
+/* 12-column grid, 19px gutter - every landing section sits on this */
+.g12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 19px;
+}
+
 /* ---------- Editorial primitives ---------- */
 
 /* Museum-signage label */
@@ -240,24 +257,70 @@ pre,
   animation-delay: 1.2s;
 }
 
-/* Hero card sway. .card-counter runs the exact mirror so the ink copy inside the card
-   stays registered with the page headline while the card rotates. Keep both in sync. */
-@keyframes card-sway {
-  0%, 100% { transform: rotate(-7deg); }
-  50%      { transform: rotate(3deg); }
+/* Hero card: slow float under the pointer tilt, plus a light sheen pass */
+@keyframes card-float {
+  0%, 100% { transform: translateY(0) rotateZ(-1.2deg); }
+  50%      { transform: translateY(-10px) rotateZ(0.8deg); }
 }
-@keyframes card-counter {
-  0%, 100% { transform: rotate(7deg); }
-  50%      { transform: rotate(-3deg); }
+.card-float {
+  animation: card-float 7s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
 }
-.card-sway {
-  transform: rotate(-7deg);
-  animation: card-sway 10s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+@keyframes card-sheen {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  60%, 100% { transform: translateX(260%) skewX(-18deg); }
 }
-.card-counter {
-  transform: rotate(7deg);
-  animation: card-counter 10s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+.card-sheen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  pointer-events: none;
+  animation: card-sheen 6s ease-in-out infinite;
+  animation-delay: 2s;
 }
+
+/* Capability cards and stack cells respond to hover with line and type shifts only */
+.cap-card {
+  transition: border-color 0.25s;
+}
+.cap-card:hover {
+  border-color: var(--ash-strong) !important;
+}
+.stack-name {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), letter-spacing 0.35s;
+}
+.stack-cell:hover .stack-name {
+  transform: translateY(-3px);
+  letter-spacing: 0.03em;
+}
+.tag {
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.tag:hover {
+  border-color: var(--bone) !important;
+}
+
+/* Dashboard entrance: panels rise in, grid children stagger */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rise,
+.stat-grid-4 > *,
+.rise-list > * {
+  animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stat-grid-4 > :nth-child(2), .rise-list > :nth-child(2) { animation-delay: 0.06s; }
+.stat-grid-4 > :nth-child(3), .rise-list > :nth-child(3) { animation-delay: 0.12s; }
+.stat-grid-4 > :nth-child(4), .rise-list > :nth-child(4) { animation-delay: 0.18s; }
+.rise-list > :nth-child(5) { animation-delay: 0.24s; }
+.rise-list > :nth-child(6) { animation-delay: 0.30s; }
+.rise-list > :nth-child(7) { animation-delay: 0.36s; }
+.rise-list > :nth-child(8) { animation-delay: 0.42s; }
+.rise-list > :nth-child(n+9) { animation-delay: 0.48s; }
 
 /* Transaction tape - continuous ledger marquee under the hero */
 @keyframes tape-scroll {
@@ -312,8 +375,11 @@ pre,
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-arrow,
-  .card-sway,
-  .card-counter,
+  .rise,
+  .stat-grid-4 > *,
+  .rise-list > *,
+  .card-float,
+  .card-sheen,
   .card-scan,
   .tape-track,
   .animate-pulse-dot {
@@ -333,10 +399,21 @@ pre,
   .intro-grid,
   .work-grid,
   .split-grid { grid-template-columns: 1fr !important; }
-  .steps-grid { grid-template-columns: 1fr 1fr !important; }
-  .stats-row  { grid-template-columns: 1fr !important; }
-  .stats-row > * { border-right: none !important; border-bottom: 1px solid var(--ash); }
   .hide-md { display: none !important; }
+  /* collapse the 12-col grid: every child spans the full row */
+  .g12 { row-gap: 30px; }
+  .g12:not(.keep) > * { grid-column: 1 / -1 !important; justify-self: stretch !important; }
+  .g12.keep > :first-child { grid-column: 1 / 8 !important; }
+  .g12.keep > :last-child { grid-column: 8 / 13 !important; }
+  .g12 > .sh-index { grid-column: 1 / 3 !important; }
+  .g12 > .sh-label { grid-column: 3 / 13 !important; }
+  .g12:has(> .sh-index) { row-gap: 0; }
+  .g12.steps-grid { row-gap: 46px; }
+  .step-dot { display: none; }
+  .step > p:first-of-type { margin-top: 30px !important; }
+  .hero-card-col { max-width: 440px; }
+  .g12.hero-label { display: flex !important; gap: 30px; }
+  .hero-h1 h1 { white-space: normal !important; font-size: clamp(44px, 13vw, 70px) !important; }
 }
 
 @media (max-width: 768px) {
@@ -371,21 +448,4 @@ pre,
 
 input[type='range'] {
   accent-color: var(--bone);
-}
-
-/* Hero on small screens: card sits above the headline, no overlap layer */
-@media (max-width: 860px) {
-  .hero-card {
-    left: 16px !important;
-    top: 96px !important;
-    width: min(calc(100% - 32px), 380px) !important;
-    height: calc(min(calc(100vw - 32px), 380px) / 1.586) !important;
-  }
-  .hero-ink,
-  .hero-stamp {
-    display: none !important;
-  }
-  .hero-copy {
-    padding-top: calc(96px + min(calc(100vw - 32px), 380px) / 1.586 + 46px) !important;
-  }
 }

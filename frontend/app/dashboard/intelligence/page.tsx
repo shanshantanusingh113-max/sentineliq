@@ -5,11 +5,12 @@ import dynamic from 'next/dynamic'
 import Sidebar from '@/components/Sidebar'
 import { api, type Intelligence, type ModelInfo, type Stats, type WebhookConfig, timeAgo } from '@/lib/api'
 import { C } from '@/lib/tokens'
+import StatCard from '@/components/StatCard'
 
 const IntelligenceCharts = dynamic(() => import('@/components/IntelligenceCharts'), {
   ssr: false,
   loading: () => (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 19 }}>
       {[...Array(4)].map((_, i) => (
         <div key={i} style={{ height: 300, background: C.card, border: `1px solid ${C.border}`, borderRadius: 0 }} />
       ))}
@@ -17,14 +18,9 @@ const IntelligenceCharts = dynamic(() => import('@/components/IntelligenceCharts
   ),
 })
 
+// Same anatomy as the overview StatCard so both pages line up
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, padding: '18px 20px' }}>
-      <p style={{ margin: '0 0 8px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>{label}</p>
-      <p style={{ margin: 0, fontSize: 28, color: C.textPrimary, fontWeight: 500 }}>{value}</p>
-      {sub && <p style={{ margin: '5px 0 0', fontSize: 11, color: C.textMuted }}>{sub}</p>}
-    </div>
-  )
+  return <StatCard label={label} value={value} sub={sub} />
 }
 
 function ModelCard({
@@ -199,10 +195,10 @@ export default function IntelligencePage() {
               disabled={training}
               style={{
                 padding: '6px 14px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
-                background: training ? 'transparent' : C.critical,
-                border: `1px solid ${training ? C.border : C.critical}`,
+                background: 'transparent',
+                border: `1px solid ${training ? C.border : C.textPrimary}`,
                 color: training ? C.textMuted : C.textPrimary,
-                borderRadius: 0, cursor: training ? 'default' : 'pointer',
+                borderRadius: 10, cursor: training ? 'default' : 'pointer',
                 opacity: training ? 0.7 : 1,
               }}
             >
@@ -220,10 +216,10 @@ export default function IntelligencePage() {
             <>
               {/* Model Pipeline cards */}
               <div>
-                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 400, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Model Pipeline
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                <div className="rise-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 19 }}>
                   <ModelCard
                     name="Isolation Forest"
                     weight="40%"
@@ -262,13 +258,13 @@ export default function IntelligencePage() {
 
               {/* Ensemble Performance stats */}
               <div>
-                <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 400, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Ensemble Performance
                 </p>
                 <p style={{ margin: '0 0 14px', fontSize: 11, color: C.textMuted }}>
                   Precision and recall computed from analyst-labeled alerts (TP/FP) · {data.training_events || 0} total events processed
                 </p>
-                <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+                <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 19 }}>
                   <Stat label="Precision" value={data.precision != null ? `${(data.precision * 100).toFixed(1)}%` : '-'} sub={data.precision == null ? 'need ≥10 labels' : undefined} />
                   <Stat label="Recall" value={data.recall != null ? `${(data.recall * 100).toFixed(1)}%` : '-'} sub={data.recall == null ? 'need ≥10 labels' : undefined} />
                   <Stat label="F1 Score" value={data.f1 != null ? `${(data.f1 * 100).toFixed(1)}%` : '-'} sub={data.f1 == null ? 'need ≥10 labels' : undefined} />
@@ -279,7 +275,7 @@ export default function IntelligencePage() {
               {/* Training log - own full-width section, below ensemble performance */}
               {logLines.length > 0 && (
                 <div>
-                  <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 400, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Training Log
                   </p>
                   <div
@@ -369,7 +365,7 @@ export default function IntelligencePage() {
                   <p style={{ margin: '0 0 16px', fontSize: 12, color: C.textMuted }}>
                     POST raw events from Finacle, Temenos, or any core banking system directly into the ML pipeline. Each event is scored and can trigger an alert.
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 19 }}>
                     <div>
                       <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Endpoint</p>
                       <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0, padding: '8px 12px', fontFamily: 'var(--font-mono)', fontSize: 11, color: C.textPrimary, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
