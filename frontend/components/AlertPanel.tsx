@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Download } from 'lucide-react'
+import { Download } from 'lucide-react'
 import { api, type Alert, type AuditEntry, type PeerComparison, type TimelineItem, formatFraudType, timeAgo, normaliseIso } from '@/lib/api'
-import { C, riskColor } from '@/lib/tokens'
+import { C, SHADOW, FONT, riskColor } from '@/lib/tokens'
 import RiskBadge from './RiskBadge'
 import SHAPChart from './SHAPChart'
 
@@ -156,7 +156,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
       setAlert({ ...alert, status: 'resolved' })
       onResolved?.(alert.id, 'resolved')
     } catch {
-      showToast('Failed to resolve - please try again')
+      showToast('Couldn\'t resolve the alert. Try again.')
     } finally { setActing(false) }
   }
 
@@ -168,7 +168,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
       setAlert({ ...alert, status: 'dismissed' })
       onResolved?.(alert.id, 'dismissed')
     } catch {
-      showToast('Failed to dismiss - please try again')
+      showToast('Couldn\'t dismiss the alert. Try again.')
     } finally { setActing(false) }
   }
 
@@ -178,7 +178,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
     await api.labelAlert(alert.id, label).catch(() => null)
     setAlert({ ...alert, label })
     setActing(false)
-    showToast('Feedback recorded - queued for next retraining cycle')
+    showToast('Label saved. It will be used in the next retrain.')
   }
 
   const saveNote = async () => {
@@ -200,14 +200,25 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      showToast('Export failed - please try again')
+      showToast('Couldn\'t export the evidence. Try again.')
     }
   }
 
   if (!alertId) return null
 
-  const scoreColor = alert ? riskColor(alert.risk_score) : C.border
+  const scoreColor = alert ? riskColor(alert.risk_score) : C.textFaint
   const action = alert ? recommendedAction(alert.risk_score) : null
+
+  const h3 = { margin: '0 0 12px', fontSize: 16, fontWeight: 400, color: C.textPrimary } as const
+  const kindStyle = (kind: string) => {
+    switch (kind) {
+      case 'trigger': return { label: 'Alert', color: C.critical, wash: C.criticalWash }
+      case 'case_opened': return { label: 'Case opened', color: C.amber, wash: C.mediumWash }
+      case 'suspicious': return { label: 'Unusual', color: C.medium, wash: C.mediumWash }
+      case 'analyst_action': return { label: 'Analyst', color: C.low, wash: C.lowWash }
+      default: return { label: 'Baseline', color: C.textMuted, wash: C.hover }
+    }
+  }
 
   return (
     <>
@@ -215,17 +226,16 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
       <div
         onClick={onClose}
         className="alert-panel-backdrop"
-        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 100 }}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(38,37,30,0.24)', zIndex: 100 }}
       />
 
       {/* Toast */}
       {toast && (
-        <div style={{
+        <div role="status" style={{
           position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
-          background: C.hover, border: `1px solid ${C.border}`, borderRadius: 4,
-          padding: '10px 20px', fontSize: 12, color: C.low, fontWeight: 600,
-          zIndex: 200, whiteSpace: 'nowrap', letterSpacing: '0.02em',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          background: C.ink, color: C.onInk, borderRadius: 4,
+          padding: '10px 18px', fontSize: 13,
+          zIndex: 200, whiteSpace: 'nowrap', boxShadow: SHADOW.popover,
         }}>
           {toast}
         </div>
@@ -233,397 +243,252 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
 
       {/* Modal */}
       <div
-        className="alert-panel-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label={alert ? `Alert for ${alert.user_name}` : 'Alert detail'}
+        className="alert-panel-overlay panel-full"
         style={{
           position: 'fixed', top: '50%', left: '50%',
-          width: 920, maxWidth: 'calc(100vw - 32px)', maxHeight: '88vh',
-          background: C.card, border: `1px solid ${C.border}`,
-          borderTop: `2px solid ${scoreColor}`,
+          width: 1000, maxWidth: 'calc(100vw - 32px)', maxHeight: '90vh',
+          background: C.bg, borderRadius: 8, boxShadow: SHADOW.popover,
           zIndex: 101, display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}
       >
         {/* Header */}
-        <div style={{
-          padding: '14px 20px', borderBottom: `1px solid ${C.border}`,
-          display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0,
-        }}>
+        <div style={{ padding: '22px 28px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'flex-start', gap: 20, flexShrink: 0 }}>
           {alert ? (
             <>
-              <div style={{
-                width: 38, height: 38, borderRadius: '50%', background: scoreColor,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0,
-              }}>
-                {alert.user_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.textPrimary }}>{alert.user_name}</p>
-                <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>{alert.user_id} · {timeAgo(alert.ingested_at ?? alert.timestamp)}</p>
+                <p style={{ margin: 0, fontFamily: FONT.mono, fontSize: 12, color: C.textMuted }}>
+                  alert {alert.id.slice(0, 8)} / {timeAgo(alert.ingested_at ?? alert.timestamp)}
+                </p>
+                <h2 style={{ margin: '6px 0 0', fontSize: 26, fontWeight: 400, letterSpacing: '-0.012em', lineHeight: 1.2, color: C.textPrimary }}>
+                  {formatFraudType(alert.fraud_type)}
+                </h2>
+                <p style={{ margin: '4px 0 0', fontSize: 14, color: C.textMuted }}>
+                  {alert.user_name} <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.textFaint, marginLeft: 6 }}>{alert.user_id}</span>
+                </p>
               </div>
-              <div style={{ border: `1px solid ${C.border}`, borderRadius: 3, padding: '3px 10px', fontSize: 11, color: C.textMuted, flexShrink: 0 }}>
-                {formatFraudType(alert.fraud_type)}
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, justifyContent: 'flex-end' }}>
+                  <RiskBadge level={alert.risk_level} />
+                  <span style={{ fontSize: 54, lineHeight: 0.9, letterSpacing: '-0.03em', color: scoreColor, fontVariantNumeric: 'tabular-nums' }}>{Math.round(alert.risk_score)}</span>
+                </div>
+                <p style={{ margin: '6px 0 0', fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>risk / 100</p>
               </div>
-              <div style={{ flexShrink: 0 }}>
-                <span style={{ fontSize: 28, fontWeight: 800, color: scoreColor, letterSpacing: '-0.02em' }}>{Math.round(alert.risk_score)}</span>
-                <span style={{ fontSize: 11, color: C.textMuted }}>/100</span>
-              </div>
-              <RiskBadge level={alert.risk_level} score={alert.risk_score} />
             </>
           ) : (
-            <div style={{ flex: 1 }}>
-              <div style={{ height: 14, width: 120, background: C.border, borderRadius: 2, marginBottom: 8 }} />
-              <div style={{ height: 10, width: 80, background: C.hover, borderRadius: 2 }} />
+            <div style={{ flex: 1 }} aria-busy="true">
+              <div className="skeleton" style={{ height: 12, width: 160, marginBottom: 12 }} />
+              <div className="skeleton" style={{ height: 24, width: 260, marginBottom: 8 }} />
+              <div className="skeleton" style={{ height: 12, width: 140 }} />
             </div>
           )}
           <button
             onClick={onClose}
-            aria-label="Close"
-            style={{
-              background: 'none', border: `1px solid ${C.border}`, color: C.textMuted,
-              cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '4px 9px',
-              borderRadius: 3, marginLeft: 4, flexShrink: 0,
-            }}
-          >×</button>
+            aria-label="Close alert"
+            className="btn btn-ghost btn-sm"
+            style={{ padding: '6px 8px', flexShrink: 0 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
         </div>
 
-        {/* Loading skeleton */}
         {loading && (
-          <div style={{ padding: 28, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {[100, 180, 80, 140, 60, 160, 90].map((w, i) => (
-              <div key={i} style={{ height: 13, width: w, background: C.border, borderRadius: 2 }} />
+          <div style={{ padding: 28, display: 'grid', gap: 14 }} aria-busy="true">
+            {[420, 560, 380, 240, 300].map((w, i) => (
+              <div key={i} className="skeleton" style={{ height: 14, width: w, maxWidth: '100%' }} />
             ))}
           </div>
         )}
 
-        {/* Two-column body */}
         {!loading && alert && (
-          <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-
-            {/* ── Left column (55%) ── */}
-            <div style={{
-              width: '55%', overflowY: 'auto', padding: 20,
-              borderRight: `1px solid ${C.border}`,
-              display: 'flex', flexDirection: 'column', gap: 20,
-            }}>
-
-              {/* ML model score cards */}
-              <div>
-                <p style={{ margin: '0 0 10px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                  Model Scores
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {/* The account - what happened, in plain language */}
+            <div style={{ padding: '24px 28px', borderBottom: `1px solid ${C.border}`, background: C.card }}>
+              <p className="serif" style={{
+                margin: 0, maxWidth: 720, fontSize: 19, lineHeight: 1.5, color: C.textBody,
+                borderLeft: `2px solid ${scoreColor}`, paddingLeft: 18,
+              }}>
+                {alert.ai_narrative || generatePlainExplanation(alert, peerData)}
+              </p>
+              {action && (
+                <p style={{ margin: '16px 0 0 20px', fontSize: 14, color: C.textBody, maxWidth: 700 }}>
+                  <span style={{ color: action.color }}>Recommended next step.</span> {action.text}
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                  {([
-                    { label: 'Isolation Forest', key: 'isolation_forest', weight: '40%', desc: 'point anomaly' },
-                    { label: 'LSTM', key: 'lstm', weight: '40%', desc: 'behavioural drift' },
-                    { label: 'XGBoost', key: 'xgboost', weight: '20%', desc: 'fraud pattern' },
-                  ] as const).map(({ label, key, weight, desc }) => {
-                    const pct = Math.round(alert.model_scores[key] * 100)
-                    const color = pct >= 65 ? C.critical : pct >= 40 ? C.medium : C.low
-                    return (
-                      <div key={key} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3, padding: '10px 12px' }}>
-                        <p style={{ margin: '0 0 6px', fontSize: 10, color: C.textMuted }}>{label}</p>
-                        <p style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color, letterSpacing: '-0.02em' }}>
-                          {pct}<span style={{ fontSize: 10, fontWeight: 400, color: C.textMuted }}>%</span>
-                        </p>
-                        <div style={{ height: 3, background: C.border, borderRadius: 2, overflow: 'hidden', marginBottom: 5 }}>
-                          <div style={{ width: `${pct}%`, height: '100%', background: color }} />
-                        </div>
-                        <p style={{ margin: 0, fontSize: 9, color: C.textMuted }}>{desc} · {weight} weight</p>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+              )}
+            </div>
 
-              {/* SHAP chart */}
-              <div>
-                <p style={{ margin: '0 0 12px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                  Feature Attribution (SHAP)
-                </p>
-                <SHAPChart values={alert.shap_values ?? []} />
-              </div>
+            <div className="alert-demo-grid" style={{ display: 'grid', gridTemplateColumns: '11fr 9fr' }}>
+              {/* Evidence */}
+              <div style={{ padding: '24px 28px', borderRight: `1px solid ${C.border}`, display: 'grid', gap: 32, alignContent: 'start' }}>
+                <section>
+                  <h3 style={h3}>What drove the score</h3>
+                  <SHAPChart values={alert.shap_values ?? []} />
+                </section>
 
-              {/* Peer comparison */}
-              {peerData && peerData.metrics.length > 0 && (
-                <div>
-                  <p style={{ margin: '0 0 12px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                    Peer Comparison
-                    <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 5 }}>({peerData.role.replace(/_/g, ' ')} peers)</span>
-                  </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {peerData.metrics.map((m) => {
-                      const color = m.multiplier > 3 ? C.critical : m.multiplier > 1.5 ? C.medium : C.low
-                      const barPct = Math.min(100, (m.multiplier / 6) * 100)
+                <section>
+                  <h3 style={h3}>How each model scored it</h3>
+                  <div style={{ border: `1px solid ${C.border}`, borderRadius: 4 }}>
+                    {([
+                      { label: 'Isolation Forest', key: 'isolation_forest', weight: '0.4', desc: 'one-off outliers' },
+                      { label: 'LSTM autoencoder', key: 'lstm', weight: '0.4', desc: 'drift over time' },
+                      { label: 'XGBoost', key: 'xgboost', weight: '0.2', desc: 'known fraud patterns' },
+                    ] as const).map(({ label, key, weight, desc }, i) => {
+                      const pct = Math.round(alert.model_scores[key] * 100)
                       return (
-                        <div key={m.metric}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <span style={{ fontSize: 11, color: C.textMuted }}>{m.metric}</span>
-                            <span style={{ fontSize: 14, fontWeight: 800, color, letterSpacing: '-0.02em' }}>{m.multiplier.toFixed(1)}x peer avg</span>
+                        <div key={key} style={{ display: 'grid', gridTemplateColumns: '1fr 110px 36px', gap: 14, alignItems: 'center', padding: '12px 14px', borderTop: i ? `1px solid ${C.border}` : 'none' }}>
+                          <div>
+                            <p style={{ margin: 0, fontSize: 14, color: C.textPrimary }}>{label}</p>
+                            <p style={{ margin: '2px 0 0', fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>{desc} / weight {weight}</p>
                           </div>
-                          <div style={{ height: 4, background: C.border, borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
-                            <div style={{ width: `${barPct}%`, height: '100%', background: color, transition: 'width 0.4s ease' }} />
+                          <div style={{ height: 6, background: C.hover, borderRadius: 2 }}>
+                            <div style={{ width: `${pct}%`, height: '100%', background: riskColor(pct), borderRadius: 2 }} />
                           </div>
-                          <p style={{ margin: 0, fontSize: 10, color: C.textMuted, lineHeight: 1.5 }}>
-                            {m.multiplier <= 1.2
-                              ? `Within normal range for ${peerData.role.replace(/_/g, ' ')} peers.`
-                              : `${m.multiplier.toFixed(1)}x higher than ${peerData.role.replace(/_/g, ' ')} peer average.`}
-                          </p>
+                          <span style={{ fontSize: 14, color: C.textPrimary, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}</span>
                         </div>
                       )
                     })}
                   </div>
-                </div>
-              )}
+                </section>
 
-              {/* Recommended action */}
-              {action && (
-                <div style={{
-                  background: C.hover, border: `1px solid ${action.color}33`,
-                  borderRadius: 3, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start',
-                }}>
-                  <AlertTriangle size={14} color={action.color} strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <div>
-                    <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, color: action.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      Recommended Action
-                    </p>
-                    <p style={{ margin: 0, fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>{action.text}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Case notes */}
-              <div>
-                <label
-                  htmlFor="case-notes"
-                  style={{ display: 'block', margin: '0 0 8px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}
-                >
-                  Case Notes
-                </label>
-                <textarea
-                  id="case-notes"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  onBlur={(e) => { saveNote(); e.target.style.borderColor = C.border }}
-                  onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') saveNote() }}
-                  placeholder="Add investigator notes… (Cmd+Enter to save)"
-                  style={{
-                    width: '100%', minHeight: 80, padding: '10px 12px',
-                    background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3,
-                    color: C.textPrimary, fontSize: 12, fontFamily: 'inherit', lineHeight: 1.6,
-                    resize: 'vertical', outline: 'none', boxSizing: 'border-box',
-                  }}
-                  onFocus={(e) => { e.target.style.borderColor = '#4D5562' }}
-                />
-                {noteSavedAt && (
-                  <p style={{ margin: '4px 0 0', fontSize: 10, color: C.low }}>Saved {timeAgo(noteSavedAt.toISOString())}</p>
-                )}
-              </div>
-            </div>
-
-            {/* ── Right column (45%) ── */}
-            <div style={{ width: '45%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-              {/* Scrollable: analysis + timeline + audit log */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-                {/* Analysis block - top of right column, always visible on open */}
-                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3 }}>
-                  <div style={{ padding: '9px 14px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, color: C.amber }}>✦</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      {alert.ai_narrative ? 'AI Analysis' : 'Alert Analysis'}
-                    </span>
-                  </div>
-                  <div style={{ padding: '12px 14px', borderBottom: `1px solid ${C.border}` }}>
-                    <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                      In Plain Terms
-                    </p>
-                    <p style={{ margin: 0, fontSize: 12, color: C.textPrimary, lineHeight: 1.75 }}>
-                      {alert.ai_narrative || generatePlainExplanation(alert, peerData)}
-                    </p>
-                  </div>
-                  <div style={{ padding: '10px 14px' }}>
-                    <p style={{ margin: '0 0 8px', fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                      Top ML Signals
-                    </p>
-                    {(alert.shap_values ?? [])
-                      .filter(v => v.contribution > 0)
-                      .sort((a, b) => b.contribution - a.contribution)
-                      .slice(0, 3)
-                      .map((v, i) => (
-                        <div key={v.feature} style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: i === 0 ? 0 : 4 }}>
-                          <span style={{ fontSize: 9, color: C.critical, fontWeight: 700 }}>↑</span>
-                          <span style={{ fontSize: 10, color: C.textMuted, fontFamily: 'monospace' }}>{v.feature}</span>
-                          <span style={{ fontSize: 10, color: C.textPrimary, fontWeight: 600 }}>+{v.contribution.toFixed(3)}</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-
-                {/* Investigation Timeline */}
-                <div>
-                  <p style={{ margin: '0 0 14px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                    Investigation Timeline
-                    {timeline.length > 0 && (
-                      <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 4 }}>· {timeline.length} events</span>
-                    )}
-                  </p>
-                  {timeline.length === 0 ? (
-                    <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>No timeline events recorded for this alert.</p>
-                  ) : (
-                    <div style={{ position: 'relative', paddingLeft: 20 }}>
-                      <div style={{ position: 'absolute', left: 4, top: 8, bottom: 8, width: 1, background: C.border }} />
-                      {timeline.map((item, i) => {
-                        const kindColor = item.kind === 'trigger' ? C.critical
-                          : item.kind === 'case_opened' ? C.amber
-                          : item.kind === 'suspicious' ? C.medium
-                          : item.kind === 'analyst_action' ? C.low
-                          : C.textMuted
-                        const kindLabel = item.kind === 'baseline' ? 'BASE'
-                          : item.kind === 'suspicious' ? 'WARN'
-                          : item.kind === 'trigger' ? 'ALERT'
-                          : item.kind === 'case_opened' ? 'CASE'
-                          : 'ACTION'
+                {peerData && peerData.metrics.length > 0 && (
+                  <section>
+                    <h3 style={h3}>Compared with other {peerData.role.replace(/_/g, ' ')}s</h3>
+                    <div style={{ display: 'grid', gap: 14 }}>
+                      {peerData.metrics.map((m) => {
+                        const color = m.multiplier > 3 ? C.critical : m.multiplier > 1.5 ? C.medium : C.low
+                        const barPct = Math.min(100, (m.multiplier / 6) * 100)
                         return (
-                          <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: i < timeline.length - 1 ? 14 : 0, position: 'relative' }}>
-                            <div style={{
-                              position: 'absolute', left: -16, top: 5,
-                              width: 8, height: 8, borderRadius: '50%',
-                              background: kindColor, border: `2px solid ${C.card}`,
-                            }} />
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                                <span style={{
-                                  fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 3,
-                                  border: `1px solid ${kindColor}`, color: kindColor,
-                                  flexShrink: 0, letterSpacing: '0.04em',
-                                }}>{kindLabel}</span>
-                                <p style={{ margin: 0, fontSize: 11, color: kindColor, fontWeight: item.kind !== 'baseline' ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {item.title}
-                                </p>
-                                {item.risk_delta && (
-                                  <span style={{ fontSize: 10, color: C.critical, fontWeight: 700, flexShrink: 0 }}>{item.risk_delta}</span>
-                                )}
-                              </div>
-                              <p style={{ margin: 0, fontSize: 10, color: C.textMuted, lineHeight: 1.5 }}>{item.explanation}</p>
+                          <div key={m.metric}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                              <span style={{ fontSize: 14, color: C.textBody }}>{m.metric}</span>
+                              <span style={{ fontSize: 14, color, fontVariantNumeric: 'tabular-nums' }}>
+                                {m.multiplier <= 1.2 ? 'within normal range' : `${m.multiplier.toFixed(1)}x peer average`}
+                              </span>
                             </div>
-                            <span style={{ fontSize: 9, color: C.textMuted, flexShrink: 0, marginTop: 2 }}>{formatTs(item.timestamp)}</span>
+                            <div style={{ height: 6, background: C.hover, borderRadius: 2, position: 'relative' }}>
+                              <div style={{ width: `${barPct}%`, height: '100%', background: color, borderRadius: 2, transition: 'width 0.4s ease' }} />
+                              <span title="Peer average" style={{ position: 'absolute', left: `${100 / 6}%`, top: -3, bottom: -3, width: 1, background: C.textMuted }} />
+                            </div>
                           </div>
                         )
                       })}
                     </div>
-                  )}
-                </div>
+                  </section>
+                )}
 
-                {/* Analyst Actions */}
-                <div>
-                  <p style={{ margin: '0 0 10px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                    Analyst Actions
-                  </p>
-                  {auditLog.length === 0 ? (
-                    <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>No actions recorded yet.</p>
+                <section>
+                  <label htmlFor="case-notes" style={{ ...h3, display: 'block' }}>Investigator notes</label>
+                  <textarea
+                    id="case-notes"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    onBlur={saveNote}
+                    onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') saveNote() }}
+                    placeholder="What did you check, and what did you find? Saved when you click away, or with Cmd+Enter."
+                    style={{
+                      width: '100%', minHeight: 96, padding: '12px 14px',
+                      background: C.card, border: `1px solid ${C.border}`, borderRadius: 4,
+                      color: C.textPrimary, fontSize: 16, lineHeight: 1.5,
+                      fontFamily: FONT.serif, resize: 'vertical', boxSizing: 'border-box',
+                    }}
+                  />
+                  {noteSavedAt && (
+                    <p style={{ margin: '6px 0 0', fontSize: 13, color: C.textMuted }}>Note saved {timeAgo(noteSavedAt.toISOString())}</p>
+                  )}
+                </section>
+              </div>
+
+              {/* Chronology */}
+              <div style={{ padding: '24px 28px', display: 'grid', gap: 32, alignContent: 'start' }}>
+                <section>
+                  <h3 style={h3}>
+                    Sequence of events
+                    {timeline.length > 0 && <span style={{ fontSize: 13, color: C.textMuted, marginLeft: 8 }}>{timeline.length}</span>}
+                  </h3>
+                  {timeline.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: 14, color: C.textMuted }}>No earlier events are linked to this alert.</p>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <ol style={{ listStyle: 'none', margin: 0, padding: '0 0 0 18px', position: 'relative' }}>
+                      <span aria-hidden="true" style={{ position: 'absolute', left: 3, top: 8, bottom: 8, width: 1, background: C.borderStrong }} />
+                      {timeline.map((item, i) => {
+                        const k = kindStyle(item.kind)
+                        return (
+                          <li key={item.id} style={{ position: 'relative', marginBottom: i < timeline.length - 1 ? 18 : 0 }}>
+                            <span aria-hidden="true" style={{ position: 'absolute', left: -18, top: 6, width: 7, height: 7, borderRadius: '50%', background: k.color, boxShadow: `0 0 0 3px ${C.bg}` }} />
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 12, color: k.color, background: k.wash, borderRadius: 4, padding: '1px 7px' }}>{k.label}</span>
+                              <span style={{ fontSize: 14, color: C.textPrimary }}>{item.title}</span>
+                              {item.risk_delta && <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.critical }}>{item.risk_delta}</span>}
+                              <span style={{ marginLeft: 'auto', fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>{formatTs(item.timestamp)}</span>
+                            </div>
+                            <p style={{ margin: '4px 0 0', fontSize: 13, color: C.textMuted, lineHeight: 1.5 }}>{item.explanation}</p>
+                          </li>
+                        )
+                      })}
+                    </ol>
+                  )}
+                </section>
+
+                <section>
+                  <h3 style={h3}>Analyst activity</h3>
+                  {auditLog.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: 14, color: C.textMuted }}>Nobody has acted on this alert yet.</p>
+                  ) : (
+                    <div style={{ display: 'grid', gap: 10 }}>
                       {auditLog.map((entry) => (
-                        <div key={entry.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                          <span style={{
-                            fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', flexShrink: 0, marginTop: 2,
-                            color: entry.action_type === 'restrict' ? C.critical : entry.action_type === 'label' ? C.low : C.textMuted,
-                            border: `1px solid ${entry.action_type === 'restrict' ? C.critical : entry.action_type === 'label' ? C.low : C.border}`,
-                            borderRadius: 2, padding: '1px 5px', textTransform: 'uppercase',
-                          }}>{entry.action_type}</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: 11, color: C.textPrimary, lineHeight: 1.4 }}>{entry.message}</p>
-                            <p style={{ margin: 0, fontSize: 10, color: C.textMuted }}>{timeAgo(entry.created_at)}</p>
-                          </div>
+                        <div key={entry.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
+                          <p style={{ margin: 0, fontSize: 14, color: C.textBody, lineHeight: 1.45 }}>{entry.message}</p>
+                          <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>{timeAgo(entry.created_at)}</span>
                         </div>
                       ))}
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Pinned footer */}
-              <div style={{
-                borderTop: `1px solid ${C.border}`, padding: '14px 20px',
-                flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8,
-                background: C.card,
-              }}>
-                {/* TP / FP label buttons */}
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {(['TP', 'FP'] as const).map((lbl) => (
-                    <button
-                      key={lbl}
-                      className="btn-action"
-                      disabled={acting}
-                      onClick={() => handleLabel(lbl)}
-                      style={{
-                        flex: 1, padding: '7px 0', fontSize: 11, fontWeight: 700,
-                        letterSpacing: '0.06em', cursor: 'pointer', borderRadius: 3,
-                        border: `1px solid ${alert.label === lbl ? (lbl === 'TP' ? C.critical : C.low) : C.border}`,
-                        background: alert.label === lbl ? (lbl === 'TP' ? 'rgba(220,38,38,0.12)' : 'rgba(22,163,74,0.12)') : 'transparent',
-                        color: alert.label === lbl ? (lbl === 'TP' ? C.critical : C.low) : C.textMuted,
-                        transition: 'all 0.15s',
-                      }}
-                    >
-                      {lbl === 'TP' ? 'True Positive' : 'False Positive'}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Resolve / Dismiss / Export */}
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {alert.status === 'open' ? (
-                    <>
-                      <button
-                        className="btn-action"
-                        disabled={acting}
-                        onClick={handleResolve}
-                        style={{
-                          flex: 1, padding: '9px 0', fontSize: 11, fontWeight: 700,
-                          letterSpacing: '0.06em', cursor: 'pointer', borderRadius: 3,
-                          background: C.critical, border: 'none', color: '#fff',
-                          opacity: acting ? 0.6 : 1,
-                        }}
-                      >MARK RESOLVED</button>
-                      <button
-                        className="btn-action"
-                        disabled={acting}
-                        onClick={handleDismiss}
-                        style={{
-                          flex: 1, padding: '9px 0', fontSize: 11, fontWeight: 700,
-                          letterSpacing: '0.06em', cursor: 'pointer', borderRadius: 3,
-                          background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted,
-                          opacity: acting ? 0.6 : 1,
-                        }}
-                      >DISMISS</button>
-                    </>
-                  ) : (
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '9px 0' }}>
-                      <span style={{
-                        fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
-                        color: alert.status === 'resolved' ? C.low : C.textMuted,
-                      }}>
-                        {alert.status === 'resolved' ? '✓ Resolved' : 'Dismissed'}
-                      </span>
-                    </div>
-                  )}
-                  <button
-                    className="btn-action"
-                    onClick={handleExport}
-                    title="Export Evidence Package"
-                    style={{
-                      padding: '9px 14px', background: 'transparent',
-                      border: `1px solid ${C.border}`, color: C.textMuted,
-                      borderRadius: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Download size={13} strokeWidth={2} />
-                  </button>
-                </div>
+                </section>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Decision bar */}
+        {!loading && alert && (
+          <div style={{
+            borderTop: `1px solid ${C.border}`, padding: '14px 28px', flexShrink: 0,
+            display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: C.bg,
+          }}>
+            <span style={{ fontSize: 14, color: C.textMuted, marginRight: 2 }}>Was this a real threat?</span>
+            {(['TP', 'FP'] as const).map((lbl) => {
+              const on = alert.label === lbl
+              return (
+                <button
+                  key={lbl}
+                  className={`btn btn-sm ${on ? 'btn-ink' : 'btn-ghost'}`}
+                  disabled={acting}
+                  aria-pressed={on}
+                  onClick={() => handleLabel(lbl)}
+                >
+                  {lbl === 'TP' ? 'Yes, real' : 'No, false positive'}
+                </button>
+              )
+            })}
+
+            <span style={{ flex: 1 }} />
+
+            <button className="btn btn-ghost btn-sm" onClick={handleExport}>
+              <Download size={13} strokeWidth={1.6} aria-hidden="true" />
+              Export evidence
+            </button>
+            {alert.status === 'open' ? (
+              <>
+                <button className="btn btn-linen btn-sm" disabled={acting} onClick={handleDismiss}>Dismiss</button>
+                <button className="btn btn-ink btn-sm" disabled={acting} onClick={handleResolve}>Mark resolved</button>
+              </>
+            ) : (
+              <span style={{ fontSize: 14, color: alert.status === 'resolved' ? C.low : C.textMuted }}>
+                {alert.status === 'resolved' ? 'Resolved' : 'Dismissed'}
+              </span>
+            )}
           </div>
         )}
       </div>

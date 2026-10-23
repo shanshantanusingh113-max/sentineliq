@@ -334,7 +334,8 @@ export interface AuditEntry {
 }
 
 export function formatFraudType(t: string): string {
-  return t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  const s = t.replace(/_/g, ' ').trim()
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 // Backend sends naive UTC datetimes (no Z suffix). Without Z, JS Date parses

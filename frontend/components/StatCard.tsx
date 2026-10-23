@@ -1,6 +1,6 @@
 'use client'
 
-import { C } from '@/lib/tokens'
+import { C, FONT } from '@/lib/tokens'
 
 interface Props {
   label: string
@@ -15,51 +15,42 @@ export default function StatCard({ label, value, sub, change, loading, accent = 
   const accentColor =
     accent === 'red' ? C.critical : accent === 'amber' ? C.medium : accent === 'green' ? C.low : C.textPrimary
 
+  const shell = {
+    background: C.card,
+    border: `1px solid ${C.border}`,
+    borderRadius: 4,
+    padding: '18px 20px 16px',
+  } as const
+
   if (loading) {
     return (
-      <div
-        style={{
-          background: C.card,
-          border: `1px solid ${C.border}`,
-          borderRadius: 4,
-          padding: '20px 24px',
-        }}
-      >
-        <div style={{ width: 80, height: 12, background: '#30363D', borderRadius: 2, marginBottom: 12 }} />
-        <div style={{ width: 120, height: 28, background: '#30363D', borderRadius: 2, marginBottom: 8 }} />
-        <div style={{ width: 60, height: 10, background: '#30363D', borderRadius: 2 }} />
+      <div style={shell} aria-busy="true">
+        <div className="skeleton" style={{ width: 96, height: 12, marginBottom: 14 }} />
+        <div className="skeleton" style={{ width: 72, height: 30, marginBottom: 10 }} />
+        <div className="skeleton" style={{ width: 120, height: 10 }} />
       </div>
     )
   }
 
   return (
-    <div
-      style={{
-        background: C.card,
-        border: `1px solid ${C.border}`,
-        borderRadius: 4,
-        padding: '20px 24px',
-      }}
-    >
-      <p style={{ margin: 0, fontSize: 11, color: C.textMuted, letterSpacing: '0.08em', fontWeight: 600, textTransform: 'uppercase' }}>
-        {label}
-      </p>
-      <p style={{ margin: '10px 0 4px', fontSize: 28, fontWeight: 700, color: accentColor, lineHeight: 1 }}>
+    <div style={shell}>
+      <p style={{ margin: 0, fontSize: 13, color: C.textMuted }}>{label}</p>
+      <p style={{
+        margin: '10px 0 8px', fontSize: 36, fontWeight: 400, color: accentColor,
+        lineHeight: 1, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums',
+      }}>
         {value}
       </p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minHeight: 16 }}>
         {change !== undefined && (
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: change > 0 ? C.critical : change < 0 ? C.low : C.textMuted,
-            }}
-          >
+          <span style={{
+            fontFamily: FONT.mono, fontSize: 12,
+            color: change > 0 ? C.critical : change < 0 ? C.low : C.textMuted,
+          }}>
             {change > 0 ? `+${change}` : change}
           </span>
         )}
-        {sub && <span style={{ fontSize: 11, color: C.textMuted }}>{sub}</span>}
+        {sub && <span style={{ fontSize: 12, color: C.textMuted }}>{sub}</span>}
       </div>
     </div>
   )

@@ -5,31 +5,23 @@ import Sidebar from '@/components/Sidebar'
 import UserTable from '@/components/UserTable'
 import SHAPChart from '@/components/SHAPChart'
 import RiskBadge from '@/components/RiskBadge'
-import { api, type User, type UserDetail, type UserEvent, type AuditEntry, timeAgo, normaliseIso } from '@/lib/api'
-import { C, riskColor, riskLevel } from '@/lib/tokens'
+import { api, type User, type UserDetail, type UserEvent, type AuditEntry, timeAgo, normaliseIso, formatFraudType } from '@/lib/api'
+import { C, FONT, riskColor, riskLevel } from '@/lib/tokens'
+import PageHeader from '@/components/PageHeader'
 
 function RiskHistoryChart({ history }: { history: { date: string; score: number }[] }) {
   if (!history.length) return null
-  const h = 80
-  const w = 300
-  const max = 100
-  const pts = history.map((p, i) => {
-    const x = (i / (history.length - 1)) * w
-    const y = h - (p.score / max) * h
-    return `${x},${y}`
-  }).join(' L ')
-  const area = `M ${pts.replace(' L ', ' L ')} L ${w},${h} L 0,${h} Z`
+  const h = 96
+  const w = 400
+  const y = (v: number) => h - (v / 100) * h
+  const pts = history.map((p, i) => `${(i / Math.max(1, history.length - 1)) * w},${y(p.score)}`).join(' ')
+  const last = history[history.length - 1]
 
   return (
-    <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block' }}>
-      <defs>
-        <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={C.critical} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={C.critical} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={area} fill="url(#riskGrad)" />
-      <polyline points={pts} fill="none" stroke={C.critical} strokeWidth="1.5" />
+    <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block', overflow: 'visible' }}
+      role="img" aria-label={`Risk score over 30 days, now ${Math.round(last.score)}`}>
+      <line x1="0" x2={w} y1={y(65)} y2={y(65)} stroke={C.critical} strokeWidth="1" strokeDasharray="3 4" vectorEffect="non-scaling-stroke" opacity="0.6" />
+      <polyline points={pts} fill="none" stroke={C.ink} strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -48,61 +40,36 @@ function ActivityHeatmap({ userId }: { userId: string }) {
   const hourCounts = Array(24).fill(0)
   events.forEach((ev) => {
     try {
-      const h = new Date(normaliseIso(ev.timestamp)).getHours()
-      if (h >= 0 && h < 24) hourCounts[h]++
+      const hr = new Date(normaliseIso(ev.timestamp)).getHours()
+      if (hr >= 0 && hr < 24) hourCounts[hr]++
     } catch {}
   })
   const maxCount = Math.max(...hourCounts, 1)
-  const totalEvents = events.length
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-        <p style={{ margin: 0, fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
-          24h Activity Pattern
-        </p>
-        <span style={{ fontSize: 10, color: C.textMuted }}>{loaded ? `${totalEvents} events` : '…'}</span>
+    <section>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 400, color: C.textPrimary }}>When they work</h3>
+        <span style={{ fontSize: 13, color: C.textMuted }}>{loaded ? `${events.length} recent events, by hour` : 'Loading'}</span>
       </div>
-      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, padding: '10px 12px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(24, 1fr)', gap: 3, marginBottom: 6 }}>
-          {hourCounts.map((count, h) => {
-            const intensity = count / maxCount
-            const bg = count === 0 ? '#1C2128'
-              : intensity > 0.65 ? C.critical
-              : intensity > 0.3 ? C.medium
-              : C.low
-            const opacity = count === 0 ? 0.5 : 0.5 + intensity * 0.5
-            return (
-              <div
-                key={h}
-                title={`${String(h).padStart(2, '0')}:00 - ${count} event${count !== 1 ? 's' : ''}`}
-                style={{
-                  height: 20, background: bg, opacity,
-                  borderRadius: 2, cursor: 'default',
-                  transition: 'opacity 0.15s',
-                }}
-              />
-            )
-          })}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 9, color: C.textMuted }}>00:00</span>
-          <span style={{ fontSize: 9, color: C.textMuted }}>06:00</span>
-          <span style={{ fontSize: 9, color: C.textMuted }}>12:00</span>
-          <span style={{ fontSize: 9, color: C.textMuted }}>18:00</span>
-          <span style={{ fontSize: 9, color: C.textMuted }}>23:00</span>
-        </div>
-        <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center' }}>
-          <span style={{ fontSize: 9, color: C.textMuted }}>Activity:</span>
-          {[['None', '#1C2128', 0.5], ['Low', C.low, 0.7], ['Medium', C.medium, 0.8], ['High', C.critical, 1]] .map(([label, color, op]) => (
-            <span key={label as string} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ width: 10, height: 10, background: color as string, opacity: op as number, borderRadius: 2, display: 'inline-block' }} />
-              <span style={{ fontSize: 9, color: C.textMuted }}>{label}</span>
-            </span>
-          ))}
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(24, 1fr)', gap: 3, alignItems: 'end', height: 56 }}>
+        {hourCounts.map((count, hr) => (
+          <div
+            key={hr}
+            title={`${String(hr).padStart(2, '0')}:00, ${count} event${count !== 1 ? 's' : ''}`}
+            style={{
+              height: count === 0 ? 3 : `${Math.max(12, (count / maxCount) * 100)}%`,
+              background: count === 0 ? C.border : C.ink,
+              opacity: count === 0 ? 1 : 0.35 + (count / maxCount) * 0.65,
+              borderRadius: 2,
+            }}
+          />
+        ))}
       </div>
-    </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+        {['00', '06', '12', '18', '23'].map(t => <span key={t} style={{ fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>{t}</span>)}
+      </div>
+    </section>
   )
 }
 
@@ -142,8 +109,7 @@ function UserProfilePanel({
     if (restricted || !detail) return
     await api.restrictUser(userId).catch(() => null)
     setRestricted(true)
-    const msg = `Access restricted for ${detail.name}. All active sessions terminated. Security team notified.`
-    setBanner({ text: msg, color: '#DC2626' })
+    setBanner({ text: `Access restricted for ${detail.name}. Active sessions were ended and the security team was notified.`, color: C.critical })
     onRestrict(userId, detail.name)
   }
 
@@ -152,195 +118,124 @@ function UserProfilePanel({
     await api.escalateUser(userId).catch(() => null)
     setEscalated(true)
     const ref = `ESC-${Math.floor(1000 + Math.random() * 9000)}`
-    setBanner({ text: `Case escalated to Senior Investigator. Reference: ${ref}`, color: '#D97706' })
+    setBanner({ text: `Escalated to a senior investigator. Reference ${ref}.`, color: C.medium })
     onEscalate(userId, detail.name)
   }
 
+  const h3 = { margin: '0 0 10px', fontSize: 16, fontWeight: 400, color: C.textPrimary } as const
+
   return (
     <aside
+      aria-label="Person profile"
       className="panel-full panel-slide-in"
       style={{
         width: 480, flexShrink: 0, height: '100vh', position: 'sticky', top: 0,
-        background: C.card, borderLeft: `1px solid ${C.border}`,
+        background: C.bg, borderLeft: `1px solid ${C.border}`,
         overflowY: 'auto', display: 'flex', flexDirection: 'column',
       }}
     >
-      <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>User Profile</span>
-        <button
-          onClick={onClose}
-          aria-label="Close user profile"
-          style={{ background: 'none', border: 'none', color: C.textMuted, cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4 }}
-        >
-          ×
+      <div style={{ padding: '14px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: C.bg, zIndex: 1 }}>
+        <span style={{ fontSize: 13, color: C.textMuted }}>Profile</span>
+        <button onClick={onClose} aria-label="Close profile" className="btn btn-ghost btn-sm" style={{ padding: '5px 7px' }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
         </button>
       </div>
 
       {loading && (
-        <div style={{ padding: 20 }}>
-          {[...Array(6)].map((_, i) => (
-            <div key={i} style={{ height: 14, background: '#30363D', borderRadius: 2, marginBottom: 12, width: [80, 140, 100, 120, 90, 110][i] }} />
-          ))}
+        <div style={{ padding: 24, display: 'grid', gap: 12 }} aria-busy="true">
+          {[180, 120, 300, 260, 220].map((w, i) => <div key={i} className="skeleton" style={{ height: 14, width: w }} />)}
         </div>
       )}
 
       {!loading && detail && (
-        <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
-              style={{
-                width: 44, height: 44, borderRadius: '50%',
-                background: riskColor(detail.risk_score),
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 15, fontWeight: 800, color: '#F0F6FC', flexShrink: 0,
-              }}
-            >
-              {detail.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.textPrimary }}>{detail.name}</p>
-              <p style={{ margin: '2px 0 0', fontSize: 11, color: C.textMuted }}>
-                {detail.role.replace(/_/g, ' ')} · {detail.department.replace(/_/g, ' ')}
+        <div style={{ padding: '22px 24px 28px', display: 'grid', gap: 28 }}>
+          {/* Identity + score */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ margin: 0, fontSize: 26, fontWeight: 400, letterSpacing: '-0.012em', color: C.textPrimary }}>{detail.name}</h2>
+              <p style={{ margin: '4px 0 0', fontSize: 14, color: C.textMuted }}>
+                {formatFraudType(detail.role)}, {formatFraudType(detail.department)}
               </p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 26, fontWeight: 800, color: riskColor(detail.risk_score) }}>
-              {Math.round(detail.risk_score)}
-            </span>
-            <div>
-              <RiskBadge level={riskLevel(detail.risk_score)} score={detail.risk_score} />
-              <p style={{ margin: '4px 0 0', fontSize: 10, color: C.textMuted }}>
-                Last seen {timeAgo(detail.last_seen)} · {detail.location}
+              <p style={{ margin: '6px 0 0', fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>
+                {detail.id} / {detail.location} / seen {timeAgo(detail.last_seen)}
               </p>
+              {(restricted || escalated) && (
+                <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                  {restricted && <span style={{ fontSize: 12, color: C.critical, background: C.criticalWash, borderRadius: 4, padding: '1px 7px' }}>Restricted</span>}
+                  {escalated && <span style={{ fontSize: 12, color: C.amber, background: C.mediumWash, borderRadius: 4, padding: '1px 7px' }}>Escalated</span>}
+                </div>
+              )}
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <span style={{ fontSize: 54, lineHeight: 0.9, letterSpacing: '-0.03em', color: riskColor(detail.risk_score), fontVariantNumeric: 'tabular-nums' }}>
+                {Math.round(detail.risk_score)}
+              </span>
+              <div style={{ marginTop: 8 }}><RiskBadge level={riskLevel(detail.risk_score)} size="sm" /></div>
             </div>
           </div>
 
-          {/* Risk history chart */}
-          <div>
-            <p style={{ margin: '0 0 8px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
-              30-Day Risk History
-            </p>
-            <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, padding: '12px 14px', overflow: 'hidden' }}>
-              <RiskHistoryChart history={detail.risk_history} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                <span style={{ fontSize: 9, color: C.textMuted }}>30d ago</span>
-                <span style={{ fontSize: 9, color: C.textMuted }}>Today</span>
-              </div>
+          {/* Risk history */}
+          <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <h3 style={h3}>Risk over 30 days</h3>
+              <span style={{ fontSize: 13, color: C.textMuted }}><span style={{ color: C.critical }}>- - -</span> alert threshold 65</span>
             </div>
-          </div>
+            <RiskHistoryChart history={detail.risk_history} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+              <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>30 days ago</span>
+              <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>today</span>
+            </div>
+          </section>
 
-          {/* Activity heatmap */}
           <ActivityHeatmap userId={userId} />
 
-          {/* Recent alerts */}
-          <div>
-            <p style={{ margin: '0 0 8px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
-              Linked Alerts ({detail.recent_alerts.length})
-            </p>
+          {/* Linked alerts */}
+          <section>
+            <h3 style={h3}>Alerts <span style={{ fontSize: 13, color: C.textMuted, marginLeft: 6 }}>{detail.recent_alerts.length}</span></h3>
             {detail.recent_alerts.length === 0 && (
-              <p style={{ fontSize: 12, color: C.textMuted }}>No recent alerts.</p>
+              <p style={{ margin: 0, fontSize: 14, color: C.textMuted }}>No alerts for this person yet.</p>
             )}
-            {detail.recent_alerts.slice(0, 4).map((alert) => {
-              const color = alert.risk_level === 'critical' || alert.risk_level === 'high' ? C.critical : alert.risk_level === 'medium' ? C.medium : C.low
-              return (
-                <div
-                  key={alert.id}
-                  style={{ padding: '8px 0', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 10 }}
-                >
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 11, color: C.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {alert.fraud_type.replace(/_/g, ' ')}
-                    </p>
-                    <p style={{ margin: 0, fontSize: 10, color: C.textMuted }}>{timeAgo(alert.ingested_at ?? alert.timestamp)}</p>
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 800, color, flexShrink: 0 }}>{Math.round(alert.risk_score)}</span>
-                </div>
-              )
-            })}
-          </div>
+            {detail.recent_alerts.slice(0, 4).map((alert) => (
+              <div key={alert.id} style={{ padding: '10px 0', borderTop: `1px solid ${C.border}`, display: 'grid', gridTemplateColumns: '1fr auto', gap: '2px 12px' }}>
+                <span style={{ fontSize: 14, color: C.textPrimary }}>{formatFraudType(alert.fraud_type)}</span>
+                <span style={{ fontSize: 16, color: riskColor(alert.risk_score), textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{Math.round(alert.risk_score)}</span>
+                <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>{timeAgo(alert.ingested_at ?? alert.timestamp)}</span>
+              </div>
+            ))}
+          </section>
 
-          {/* SHAP from most recent alert */}
           {detail.recent_alerts[0]?.shap_values?.length > 0 && (
-            <div>
-              <p style={{ margin: '0 0 10px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
-                Top Risk Factors (Latest Alert)
-              </p>
+            <section>
+              <h3 style={h3}>What drove the latest alert</h3>
               <SHAPChart values={detail.recent_alerts[0].shap_values} />
-            </div>
+            </section>
           )}
 
-          {/* Action history */}
           {auditLog.length > 0 && (
-            <div>
-              <p style={{ margin: '0 0 8px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
-                Action History
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <section>
+              <h3 style={h3}>Analyst activity</h3>
+              <div style={{ display: 'grid', gap: 10 }}>
                 {auditLog.map((entry) => (
-                  <div key={entry.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
-                    <span style={{
-                      fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', flexShrink: 0, marginTop: 2,
-                      color: entry.action_type === 'restrict' ? C.critical : entry.action_type === 'label' ? C.low : C.textMuted,
-                      border: `1px solid ${entry.action_type === 'restrict' ? C.critical : entry.action_type === 'label' ? C.low : C.border}`,
-                      borderRadius: 2, padding: '1px 5px', textTransform: 'uppercase',
-                    }}>
-                      {entry.action_type}
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: 11, color: C.textPrimary, lineHeight: 1.4 }}>{entry.message}</p>
-                      <p style={{ margin: 0, fontSize: 10, color: C.textMuted }}>{timeAgo(entry.created_at)}</p>
-                    </div>
+                  <div key={entry.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
+                    <p style={{ margin: 0, fontSize: 14, color: C.textBody, lineHeight: 1.45 }}>{entry.message}</p>
+                    <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>{timeAgo(entry.created_at)}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Actions */}
           {banner && (
-            <div
-              role="status"
-              aria-live="polite"
-              style={{
-                padding: '10px 12px', fontSize: 11, color: '#F0F6FC',
-                background: `${banner.color}22`, border: `1px solid ${banner.color}`, borderRadius: 3,
-                lineHeight: 1.5,
-              }}
-            >
+            <p role="status" aria-live="polite" style={{ margin: 0, fontSize: 14, color: C.textBody, lineHeight: 1.5, borderLeft: `2px solid ${banner.color}`, paddingLeft: 12 }}>
               {banner.text}
-            </div>
+            </p>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-            <button
-              className="btn-action"
-              onClick={handleRestrict}
-              disabled={restricted}
-              style={{
-                padding: '9px 0', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                background: restricted ? '#30363D' : C.critical,
-                border: 'none', color: restricted ? C.textMuted : '#F0F6FC',
-                borderRadius: 3, cursor: restricted ? 'default' : 'pointer',
-              }}
-            >
-              {restricted ? 'ACCESS RESTRICTED' : 'RESTRICT ACCESS'}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-linen" style={{ flex: 1 }} onClick={handleEscalate} disabled={escalated}>
+              {escalated ? 'Escalated' : 'Escalate to investigator'}
             </button>
-            <button
-              className="btn-action"
-              onClick={handleEscalate}
-              disabled={escalated}
-              style={{
-                padding: '9px 0', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                background: escalated ? `${C.amber}22` : 'transparent',
-                border: `1px solid ${escalated ? C.amber : C.border}`,
-                color: escalated ? C.amber : C.textMuted,
-                borderRadius: 3, cursor: escalated ? 'default' : 'pointer',
-              }}
-            >
-              {escalated ? 'ESCALATED' : 'ESCALATE CASE'}
+            <button className="btn btn-ink" style={{ flex: 1 }} onClick={handleRestrict} disabled={restricted}>
+              {restricted ? 'Access restricted' : 'Restrict access'}
             </button>
           </div>
         </div>
@@ -423,83 +318,66 @@ export default function UsersPage() {
       <Sidebar />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-        {/* Top bar */}
-        <div
-          style={{
-            height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0 24px', borderBottom: `1px solid ${C.border}`,
-            background: C.card, flexShrink: 0,
-          }}
-        >
-          <h1 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textPrimary }}>User Monitoring</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 11, color: C.textMuted }}>INTERNAL NETWORK: BANK_CORP_01</span>
-            <span style={{ fontSize: 11, color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 3, padding: '3px 8px' }}>
-              {users.length} Active Employees
-            </span>
-          </div>
-        </div>
+        <PageHeader title="Users" description={`${users.length} people on the Bank Corp 01 network. Watched people sort to the top.`}>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => {
+              const blob = new Blob([JSON.stringify(displayedUsers, null, 2)], { type: 'application/json' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = `sentineliq-users-${new Date().toISOString().slice(0, 10)}.json`
+              a.click()
+              URL.revokeObjectURL(url)
+            }}
+          >
+            Export as JSON
+          </button>
+        </PageHeader>
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h2 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textPrimary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                Monitoring Queue
-              </h2>
-              {/* Watchlist filter tabs */}
-              <div style={{ display: 'flex', gap: 4 }}>
-                {(['all', 'watchlist'] as const).map((tab) => (
+        <main className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '20px 28px 40px' }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', flex: '1 1 280px', maxWidth: 420 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="1.6" strokeLinecap="round" aria-hidden="true" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}>
+                <circle cx="11" cy="11" r="7" /><line x1="20" y1="20" x2="16" y2="16" />
+              </svg>
+              <input
+                type="search"
+                aria-label="Search people"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or ID"
+                style={{
+                  width: '100%', padding: '9px 12px 9px 34px',
+                  background: C.card, border: `1px solid ${C.border}`, borderRadius: 4,
+                  color: C.textPrimary, fontSize: 14, fontFamily: 'inherit',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            <div role="tablist" aria-label="Filter people" style={{ display: 'inline-flex', background: C.hover, borderRadius: 4, padding: 3 }}>
+              {(['all', 'watchlist'] as const).map((tab) => {
+                const on = watchlistFilter === tab
+                return (
                   <button
                     key={tab}
+                    role="tab"
+                    aria-selected={on}
                     onClick={() => setWatchlistFilter(tab)}
                     style={{
-                      padding: '4px 10px', fontSize: 10, fontWeight: 700,
-                      letterSpacing: '0.05em', textTransform: 'uppercase',
-                      background: watchlistFilter === tab ? C.textPrimary : 'transparent',
-                      border: `1px solid ${watchlistFilter === tab ? C.textPrimary : C.border}`,
-                      color: watchlistFilter === tab ? C.bg : C.textMuted,
+                      padding: '6px 12px', fontSize: 13, fontFamily: 'inherit',
+                      background: on ? C.bg : 'transparent',
+                      boxShadow: on ? '0 1px 2px rgba(38,37,30,0.08)' : 'none',
+                      border: 'none', color: on ? C.textPrimary : C.textMuted,
                       borderRadius: 3, cursor: 'pointer',
                     }}
                   >
-                    {tab === 'all' ? 'All' : `Watchlist${watchlist.size > 0 ? ` (${watchlist.size})` : ''}`}
+                    {tab === 'all' ? 'Everyone' : `Watchlist${watchlist.size > 0 ? ` ${watchlist.size}` : ''}`}
                   </button>
-                ))}
-              </div>
+                )
+              })}
             </div>
-            <button
-              onClick={() => {
-                const blob = new Blob([JSON.stringify(displayedUsers, null, 2)], { type: 'application/json' })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = `sentineliq-users-${new Date().toISOString().slice(0, 10)}.json`
-                a.click()
-                URL.revokeObjectURL(url)
-              }}
-              style={{
-                padding: '6px 14px', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted,
-                borderRadius: 3, cursor: 'pointer',
-              }}
-            >
-              EXPORT REPORT
-            </button>
           </div>
-
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name or user ID..."
-            style={{
-              width: '100%', padding: '8px 12px', marginBottom: 12,
-              background: C.card, border: `1px solid ${C.border}`, borderRadius: 0,
-              color: C.textPrimary, fontSize: 12, fontFamily: 'inherit', outline: 'none',
-              boxSizing: 'border-box',
-            }}
-            onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = '#4D5562' }}
-            onBlur={(e) => { (e.target as HTMLInputElement).style.borderColor = C.border }}
-          />
 
           <UserTable
             users={displayedUsers}

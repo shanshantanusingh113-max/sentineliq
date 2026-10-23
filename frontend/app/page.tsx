@@ -1,563 +1,500 @@
 'use client'
 
 import Link from 'next/link'
-import { motion, type Variants } from 'framer-motion'
-import { C as TOKENS } from '@/lib/tokens'
+import { motion, useReducedMotion } from 'framer-motion'
+import { C, FONT, SHADOW } from '@/lib/tokens'
+import { Wordmark } from '@/components/Logo'
 
-const C = {
-  bg: TOKENS.bg,
-  card: TOKENS.card,
-  border: TOKENS.border,
-  primary: TOKENS.textPrimary,
-  muted: TOKENS.textMuted,
-  body: 'rgba(240,246,252,0.72)',
-  red: TOKENS.critical,
-  amber: TOKENS.amber,
-  green: TOKENS.low,
-  hover: TOKENS.hover,
-  bgDeep: TOKENS.bgDeep,
-  panel: TOKENS.panel,
-}
+// ── Content ──────────────────────────────────────────────
 
-const containerVariants: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.11 } },
-}
-const fadeInUp: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-}
-const fadeIn: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.45, ease: 'easeOut' } },
-}
-const BTN_TAP = { scale: 0.97 }
-
-const MOCK_ALERTS = [
-  { id: 'a3f9b2c1', user: 'James Sterling', type: 'Bulk Data Export', risk: 'CRITICAL', score: 94, color: C.red },
-  { id: 'b7d1e4f0', user: 'Maria Lopez',    type: 'Off-Hours Login',  risk: 'HIGH',     score: 78, color: C.red },
-  { id: 'c2a8f3d9', user: 'Arun Kapoor',    type: 'Velocity Spike',   risk: 'MEDIUM',   score: 61, color: C.amber },
+const QUEUE = [
+  { id: 'a3f9b2c', user: 'James Sterling', role: 'Treasury officer', type: 'Bulk data export', score: 94, at: '02:14' },
+  { id: 'b7d1e4f', user: 'Maria Lopez', role: 'Teller', type: 'Off-hours login', score: 78, at: '01:52' },
+  { id: 'c2a8f3d', user: 'Arun Kapoor', role: 'Analyst', type: 'Velocity spike', score: 61, at: '01:37' },
+  { id: 'd9e0a17', user: 'Hana Okafor', role: 'Admin', type: 'Privilege escalation', score: 57, at: '00:58' },
 ]
 
-const SHAP_MOCK = [
-  { feature: 'transaction_velocity_ratio', value: 28.4, positive: true },
-  { feature: 'off_hours_ratio',            value: 19.2, positive: true },
-  { feature: 'access_entropy',             value: 14.1, positive: true },
-  { feature: 'login_hour_deviation',       value: 9.3,  positive: true },
-  { feature: 'download_volume_zscore',     value: 6.2,  positive: false },
+const SHAP = [
+  { feature: 'transaction_velocity_ratio', value: 28.4 },
+  { feature: 'off_hours_ratio', value: 19.2 },
+  { feature: 'access_entropy', value: 14.1 },
+  { feature: 'login_hour_deviation', value: 9.3 },
+  { feature: 'download_volume_zscore', value: -6.2 },
 ]
 
-const STATS = [
-  { value: '$19.5M', unit: 'per year', label: 'Average insider risk cost per organisation (Ponemon, 2026)' },
-  { value: '67',     unit: 'days',     label: 'Average time to contain an insider incident (Ponemon, 2026)' },
-  { value: '0.4%',  unit: '',       label: 'False positive rate on 3-model ensemble', red: true },
+const FACTS = [
+  { value: '$19.5M', label: 'Average yearly cost of insider risk per organisation', source: 'Ponemon, 2026' },
+  { value: '67 days', label: 'Average time to contain an insider incident', source: 'Ponemon, 2026' },
+  { value: '0.4%', label: 'False positive rate of the three-model ensemble on the demo workforce', source: 'SentinelIQ validation' },
 ]
 
-const FEATURES = [
-  {
-    label: 'Per-user behavioural baselines',
-    desc: 'Each employee is scored against their own 30-day history, not a generic role profile. Off-hours logins, download volumes, and cross-department queries are all measured against what that specific user actually does.',
-    visual: 'baseline',
-  },
-  {
-    label: '3-model ensemble scoring',
-    desc: 'Isolation Forest, an LSTM Autoencoder, and XGBoost score every event in parallel. When the models disagree, that disagreement is itself a signal surfaced to the analyst alongside the final risk score.',
-    visual: 'ensemble',
-  },
-  {
-    label: 'SHAP explainability, built in',
-    desc: 'Every alert ships with feature attribution. Analysts see exactly which behavioural signals drove the score, by how much, measured against the user\'s own baseline. No black-box anomaly flags.',
-    visual: 'shap',
-  },
+const STEPS = [
+  { title: 'Detect', body: 'Each action becomes eight rolling-window features and is scored by all three models within milliseconds.' },
+  { title: 'Surface', body: 'Scores above 65 land in the analyst queue with who, what, and how far from normal, in one line.' },
+  { title: 'Explain', body: 'One click opens the case: 30 days of history, SHAP attribution, peer comparison, and every linked event.' },
+  { title: 'Decide', body: 'Resolve or escalate. Each analyst label is kept and used to retrain the supervised model.' },
 ]
 
-const WORKFLOW = [
-  {
-    n: '01',
-    title: 'Detect',
-    desc: 'Every user action is encoded into 8 rolling-window features and scored across all three models in real time. The ensemble produces a single 0-100 risk score within milliseconds.',
-  },
-  {
-    n: '02',
-    title: 'Surface',
-    desc: 'When the ensemble score breaches threshold, an alert lands on the analyst queue with a one-line summary: who triggered it, what the event type was, and the risk score.',
-  },
-  {
-    n: '03',
-    title: 'Explain',
-    desc: 'One click opens the full case view: 30-day risk history, SHAP attribution, individual model scores, peer comparison against same-role employees, and every linked prior event for that user.',
-  },
-  {
-    n: '04',
-    title: 'Decide',
-    desc: 'Resolve or escalate with a single action. Every analyst label feeds back into active learning so the XGBoost model improves with each decision made on the platform.',
-  },
-]
-
-const ENVIRONMENTS = [
+const SECTORS = [
   {
     title: 'Banking and fintech',
-    desc: 'Tellers, treasury desks, and payment operators hold access that can move money in a single action. SentinelIQ scores every transaction burst, cross-desk query, and bulk record export against that employee\'s own baseline.',
-    tags: ['Off-hours access to core banking systems', 'Bulk customer record download alerts', 'Transaction velocity spikes'],
+    body: 'Tellers, treasury desks, and payment operators can move money in a single action. Every transaction burst, cross-desk query, and bulk export is read against that employee\'s own history.',
+    points: ['Off-hours access to core banking', 'Bulk customer record downloads', 'Transaction velocity spikes'],
   },
   {
-    title: 'Privileged IT and admin accounts',
-    desc: 'Admins and service accounts are the highest-value target for insider abuse and credential theft. SentinelIQ flags privilege escalation, account tampering, and unusual device or location changes the moment they happen.',
-    tags: ['Real-time privilege escalation alerts', 'Account modification tracking', 'Device and location anomaly detection'],
+    title: 'Privileged IT accounts',
+    body: 'Admins and service accounts are the most valuable target for abuse and credential theft. Privilege changes, account tampering, and new devices are flagged as they happen.',
+    points: ['Privilege escalation', 'Account modification tracking', 'Device and location changes'],
   },
   {
     title: 'Compliance and audit',
-    desc: 'Every alert maps to a MITRE ATT&CK technique. Case files include the full event chain, SHAP evidence, and analyst labels, packaged for regulator, compliance, or internal audit handoff.',
-    tags: ['T1078: Valid Accounts', 'T1530: Data from Cloud Storage', 'T1087: Account Discovery'],
+    body: 'Every alert maps to a MITRE ATT&CK technique. Case files carry the full event chain, attribution, and analyst decisions, ready for a regulator or internal audit.',
+    points: ['T1078 Valid Accounts', 'T1530 Data from Cloud Storage', 'T1087 Account Discovery'],
   },
   {
-    title: 'Security operations teams',
-    desc: 'Each alert arrives pre-explained with risk score, top SHAP drivers, 30-day behavioural history, and peer comparison. Analysts triage in seconds rather than spending hours on manual correlation.',
-    tags: ['Ensemble-scored alerts with SHAP attribution', 'Audit-ready JSON case export per incident', 'Kill-chain case clustering across linked events'],
+    title: 'Security operations',
+    body: 'Alerts arrive already explained, so analysts triage in seconds instead of correlating logs by hand for an hour.',
+    points: ['Attribution on every alert', 'JSON evidence export per incident', 'Linked events grouped into cases'],
   },
 ]
 
-const FRAMEWORKS = ['Isolation Forest', 'LSTM Autoencoder', 'XGBoost', 'SHAP', 'FastAPI', 'Next.js']
+const STACK = ['Isolation Forest', 'LSTM autoencoder', 'XGBoost', 'SHAP', 'FastAPI', 'Next.js']
+
+// ── Type helpers ─────────────────────────────────────────
+
+const display = (size: number, tracking: string) => ({
+  margin: 0,
+  fontSize: size,
+  fontWeight: 400,
+  letterSpacing: tracking,
+  lineHeight: size >= 60 ? 1.04 : size >= 34 ? 1.16 : 1.28,
+  color: C.textPrimary,
+})
+
+const serifBody = {
+  fontFamily: FONT.serif,
+  fontSize: 19,
+  lineHeight: 1.5,
+  color: C.textBody,
+  margin: 0,
+} as const
+
+const mono = (size = 12, color: string = C.textMuted) => ({
+  fontFamily: FONT.mono,
+  fontSize: size,
+  color,
+  letterSpacing: 0,
+})
+
+const WRAP = { maxWidth: 1300, margin: '0 auto', padding: '0 24px' } as const
+
+// ── Page ─────────────────────────────────────────────────
 
 export default function LandingPage() {
-  return (
-    <div style={{ background: C.bg, minHeight: '100vh', fontFamily: 'inherit', overflowX: 'hidden' }}>
+  const reduce = useReducedMotion()
+  const rise = (delay: number) => reduce
+    ? {}
+    : { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as const } }
 
-      {/* ── Nav ── */}
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        borderBottom: `1px solid ${C.border}`,
-        background: 'rgba(13,17,23,0.92)',
-        backdropFilter: 'blur(12px)',
-      }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 26, height: 26, overflow: 'hidden', flexShrink: 0 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="SentinelIQ" style={{ height: 26, width: 'auto', display: 'block' }} />
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: C.primary, letterSpacing: '-0.02em' }}>SentinelIQ</span>
-          </div>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
-            {['Models', 'Explainability', 'Enterprise'].map(item => (
-              <span key={item} style={{ fontSize: 13, color: C.muted, cursor: 'default' }}>{item}</span>
-            ))}
-            <motion.div whileHover={{ scale: 1.04 }} whileTap={BTN_TAP}>
-              <Link href="/dashboard" style={{
-                fontSize: 12, fontWeight: 700, letterSpacing: '0.05em',
-                padding: '7px 16px', borderRadius: 3,
-                background: C.primary, color: C.bg, textDecoration: 'none', display: 'block',
-              }}>
-                VIEW LIVE DEMO
-              </Link>
-            </motion.div>
+  return (
+    <div style={{ background: C.bg, minHeight: '100vh', overflowX: 'hidden' }}>
+
+      {/* Nav */}
+      <header style={WRAP}>
+        <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/" aria-label="SentinelIQ home" style={{ textDecoration: 'none' }}>
+            <Wordmark />
+          </Link>
+          <nav aria-label="Primary" className="hide-sm" style={{ display: 'flex', gap: 28, fontSize: 14 }}>
+            <a href="#scoring" className="nav-link">Scoring</a>
+            <a href="#explain" className="nav-link">Explainability</a>
+            <a href="#workflow" className="nav-link">Workflow</a>
+            <a href="#sectors" className="nav-link">Sectors</a>
           </nav>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <a href="https://github.com/shanshantanusingh113-max/sentineliq" target="_blank" rel="noopener noreferrer" className="nav-link hide-sm" style={{ fontSize: 14 }}>GitHub</a>
+            <Link href="/dashboard" className="btn btn-ink btn-sm">Open dashboard</Link>
+          </div>
         </div>
       </header>
 
-      {/* ── Hero - split layout ── */}
-      <section style={{
-        backgroundImage: `linear-gradient(to right, rgba(13,17,23,1) 55%, rgba(13,17,23,0.3) 100%), url('/hero-bg.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center right', backgroundRepeat: 'no-repeat',
-        borderBottom: `1px solid ${C.border}`,
-      }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px 72px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
-
-          {/* Left: text */}
-          <div>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-              style={{ margin: '0 0 20px', fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-            >
-              Designed for the SOC desk
-            </motion.p>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.07 }}
-              style={{ margin: '0 0 20px', fontSize: 'clamp(32px, 4.5vw, 54px)', fontWeight: 800, color: C.primary, lineHeight: 1.08, letterSpacing: '-0.03em' }}
-            >
-              Detect Insider Threats{' '}
-              <span style={{ color: C.red }}>Before the Damage Is Done.</span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.15 }}
-              style={{ margin: '0 0 32px', fontSize: 16, color: C.body, lineHeight: 1.72, maxWidth: 460 }}
-            >
-              SentinelIQ is an AI-driven cybersecurity platform that builds a behavioural fingerprint for every privileged user and scores every action in real time. When behaviour deviates from baseline, the security team knows within seconds, not after data or money has already left the building.
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.22 }}
-              style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}
-            >
-              <motion.div whileHover={{ scale: 1.04 }} whileTap={BTN_TAP}>
-                <Link href="/dashboard" style={{
-                  fontSize: 13, fontWeight: 700, letterSpacing: '0.02em',
-                  padding: '11px 24px', borderRadius: 3,
-                  background: C.primary, color: C.bg, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
-                }}>
-                  View Live Demo →
-                </Link>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={BTN_TAP}>
-                <a href="#workflow" style={{
-                  fontSize: 13, fontWeight: 600, padding: '11px 24px', borderRadius: 3,
-                  background: 'transparent', color: C.primary,
-                  border: `1px solid ${C.border}`, textDecoration: 'none', display: 'block',
-                }}>
-                  See How It Works
-                </a>
-              </motion.div>
-            </motion.div>
-          </div>
-
-          {/* Right: browser mockup */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.3 }}
-          >
-            <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-            >
-              <div style={{
-                border: `1px solid ${C.border}`, borderRadius: 6, overflow: 'hidden',
-                boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
-              }}>
-                <div className="mockup-scanline" />
-                <div style={{ background: C.bgDeep, borderBottom: `1px solid ${C.border}`, padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  {[C.red, C.amber, C.green].map((c, i) => (
-                    <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: c, opacity: 0.7 }} />
-                  ))}
-                  <div style={{ flex: 1, marginLeft: 12, height: 20, background: C.card, borderRadius: 3, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', paddingLeft: 8, gap: 5 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.green }} />
-                    <span style={{ fontSize: 10, color: C.muted }}>sentineliq.vercel.app/dashboard</span>
-                  </div>
-                </div>
-                <div style={{ background: C.bg, display: 'grid', gridTemplateColumns: '130px 1fr', minHeight: 280 }}>
-                  <div style={{ borderRight: `1px solid ${C.border}`, padding: '12px 0', background: C.bg }}>
-                    <div style={{ padding: '4px 12px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/logo.png" alt="" aria-hidden="true" style={{ height: 18, width: 'auto', display: 'block' }} />
-                      <span style={{ fontSize: 10, fontWeight: 700, color: C.primary }}>SentinelIQ</span>
-                    </div>
-                    {[{ label: 'Overview', active: true }, { label: 'Alerts', active: false }, { label: 'Users', active: false }].map(({ label, active }) => (
-                      <div key={label} style={{
-                        padding: '6px 12px', fontSize: 10,
-                        color: active ? C.primary : C.muted,
-                        background: active ? C.hover : 'transparent',
-                        borderLeft: active ? `2px solid ${C.red}` : '2px solid transparent',
-                      }}>{label}</div>
-                    ))}
-                  </div>
-                  <div style={{ padding: 12 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
-                      {[
-                        { label: 'Users Monitored', value: '50', color: C.primary },
-                        { label: 'Alerts Today',    value: '7',  color: C.primary },
-                        { label: 'High Risk',       value: '3',  color: C.red },
-                        { label: 'FP Rate',         value: '0.4%', color: C.green },
-                      ].map(({ label, value, color }) => (
-                        <div key={label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 3, padding: '8px 10px' }}>
-                          <p style={{ margin: '0 0 3px', fontSize: 7, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{label}</p>
-                          <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color, letterSpacing: '-0.02em' }}>{value}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{ padding: '6px 10px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span className="animate-pulse-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, display: 'inline-block' }} />
-                        <span style={{ fontSize: 7, color: C.muted, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Live Intelligence Feed</span>
-                      </div>
-                      {MOCK_ALERTS.map((alert, i) => (
-                        <div key={alert.id} style={{
-                          display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px',
-                          borderBottom: i < MOCK_ALERTS.length - 1 ? `1px solid ${C.border}` : 'none',
-                        }}>
-                          <span style={{ fontSize: 8, color: C.muted, fontFamily: 'monospace', width: 44, flexShrink: 0 }}>{alert.id.slice(0, 7)}</span>
-                          <span style={{ fontSize: 9, color: C.primary, fontWeight: 600, flex: 1 }}>{alert.user}</span>
-                          <span style={{ fontSize: 9, color: C.muted }}>{alert.type}</span>
-                          <span style={{ fontSize: 6, fontWeight: 700, color: alert.color, border: `1px solid ${alert.color}`, borderRadius: 2, padding: '1px 5px', letterSpacing: '0.05em', flexShrink: 0 }}>{alert.risk}</span>
-                          <span style={{ fontSize: 10, fontWeight: 800, color: alert.color, width: 22, textAlign: 'right', flexShrink: 0 }}>{alert.score}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+      {/* Hero */}
+      <section style={{ ...WRAP, paddingTop: 88 }}>
+        <div style={{ maxWidth: 940 }}>
+          <motion.h1 {...rise(0)} style={{ ...display(72, '-0.03em'), fontSize: 'clamp(42px, 6.4vw, 72px)' }}>
+            Catch the insider before the money moves.
+          </motion.h1>
+          <motion.p {...rise(0.08)} className="serif" style={{ ...serifBody, marginTop: 28, maxWidth: 620 }}>
+            SentinelIQ learns how each privileged employee normally works, scores every action against that baseline,
+            and hands your analysts a written account of what changed and why it matters.
+          </motion.p>
+          <motion.div {...rise(0.16)} style={{ display: 'flex', gap: 10, marginTop: 36, flexWrap: 'wrap' }}>
+            <Link href="/dashboard" className="btn btn-ink">Open the live dashboard</Link>
+            <a href="#workflow" className="btn btn-linen">See how an alert is made</a>
           </motion.div>
         </div>
-      </section>
 
-      {/* ── Stats strip ── */}
-      <section style={{ borderBottom: `1px solid ${C.border}` }}>
-        <motion.div
-          variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }}
-          style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}
-        >
-          {STATS.map(({ value, unit, label, red }, i) => (
-            <motion.div key={label} variants={fadeIn}
-              style={{ padding: '40px 40px', borderRight: i < STATS.length - 1 ? `1px solid ${C.border}` : 'none' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 8 }}>
-                <span style={{ fontSize: 36, fontWeight: 800, lineHeight: 1, color: red ? C.red : C.primary, letterSpacing: '-0.03em' }}>{value}</span>
-                {unit && <span style={{ fontSize: 12, color: C.muted }}>{unit}</span>}
-              </div>
-              <p style={{ margin: 0, fontSize: 13, color: C.body, lineHeight: 1.6 }}>{label}</p>
-            </motion.div>
-          ))}
+        <motion.div {...rise(0.3)} style={{ marginTop: 72 }}>
+          <ProductWindow />
         </motion.div>
       </section>
 
-      {/* ── Features - 3 columns ── */}
-      <section style={{ borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px' }}>
-          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-            style={{ marginBottom: 52 }}
-          >
-            <p style={{ margin: '0 0 12px', fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Built around the analyst</p>
-            <h2 style={{ margin: 0, fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 800, color: C.primary, letterSpacing: '-0.02em', lineHeight: 1.15, maxWidth: 560 }}>
-              Every screen, every chart, every chip is there because an analyst asked for it.
-            </h2>
-          </motion.div>
-
-          <motion.div
-            variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: C.border, border: `1px solid ${C.border}`, borderRadius: 4, overflow: 'hidden' }}
-          >
-            {FEATURES.map(({ label, desc, visual }) => (
-              <motion.div key={label} variants={fadeInUp}
-                style={{ background: C.card, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}
-              >
-                {/* Visual preview */}
-                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3, padding: '12px 14px', minHeight: 72 }}>
-                  {visual === 'baseline' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      {[{ label: 'Login hour', pct: 72, color: C.red }, { label: 'Download vol', pct: 45, color: C.amber }, { label: 'Dept access', pct: 28, color: C.green }].map(b => (
-                        <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 8, color: C.muted, width: 56, flexShrink: 0 }}>{b.label}</span>
-                          <div style={{ flex: 1, height: 4, background: C.border, borderRadius: 2, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${b.pct}%`, background: b.color, borderRadius: 2 }} />
-                          </div>
-                          <span style={{ fontSize: 8, color: b.color, width: 24, textAlign: 'right' }}>{b.pct}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {visual === 'ensemble' && (
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 60 }}>
-                      {[{ m: 'IF', h: 48, c: C.red }, { m: 'LSTM', h: 62, c: C.amber }, { m: 'XGB', h: 55, c: C.green }].map(b => (
-                        <div key={b.m} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
-                          <div style={{ width: '100%', height: b.h, background: b.c, opacity: 0.75, borderRadius: '2px 2px 0 0' }} />
-                          <span style={{ fontSize: 7, color: C.muted, fontWeight: 700 }}>{b.m}</span>
-                        </div>
-                      ))}
-                      <div style={{ width: 1, height: 62, background: C.border, alignSelf: 'flex-start' }} />
-                      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', paddingLeft: 4 }}>
-                        <span style={{ fontSize: 7, color: C.muted }}>score</span>
-                        <span style={{ fontSize: 18, fontWeight: 800, color: C.red, lineHeight: 1 }}>88</span>
-                      </div>
-                    </div>
-                  )}
-                  {visual === 'shap' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {SHAP_MOCK.slice(0, 3).map(s => (
-                        <div key={s.feature} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 7, color: C.muted, fontFamily: 'monospace', width: 76, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.feature}</span>
-                          <div style={{ flex: 1, height: 3, background: C.border, borderRadius: 1, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${Math.min((s.value / 30) * 100, 100)}%`, background: s.positive ? C.red : C.green, borderRadius: 1 }} />
-                          </div>
-                          <span style={{ fontSize: 7, color: s.positive ? C.red : C.green, width: 20, textAlign: 'right' }}>{s.positive ? '+' : '−'}{s.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 700, color: C.primary, letterSpacing: '-0.01em' }}>{label}</p>
-                  <p style={{ margin: 0, fontSize: 13, color: C.body, lineHeight: 1.65 }}>{desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Analyst workflow - 4 steps ── */}
-      <section id="workflow" style={{ background: C.card, borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px' }}>
-          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-            style={{ marginBottom: 52 }}
-          >
-            <p style={{ margin: '0 0 12px', fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Analyst workflow</p>
-            <h2 style={{ margin: 0, fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 800, color: C.primary, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-              Detect, explain, decide. In under 30 seconds.
-            </h2>
-          </motion.div>
-
-          <motion.div
-            variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: C.border, border: `1px solid ${C.border}`, borderRadius: 4, overflow: 'hidden' }}
-          >
-            {WORKFLOW.map(({ n, title, desc }) => (
-              <motion.div key={n} variants={fadeInUp}
-                whileHover={{ backgroundColor: C.panel, transition: { duration: 0.15 } }}
-                style={{ background: C.bg, padding: '28px 22px', cursor: 'default' }}
-              >
-                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 800, color: C.red, fontFamily: 'monospace', letterSpacing: '0.04em' }}>{n}</p>
-                <p style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: C.primary, letterSpacing: '-0.01em' }}>{title}</p>
-                <p style={{ margin: 0, fontSize: 14, color: C.body, lineHeight: 1.65 }}>{desc}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── SHAP investigator view ── */}
-      <section style={{ borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-            <p style={{ margin: '0 0 12px', fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Investigator view</p>
-            <h2 style={{ margin: '0 0 16px', fontSize: 'clamp(22px, 3vw, 32px)', fontWeight: 800, color: C.primary, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-              When the score breaks threshold, the analyst sees the full picture.
-            </h2>
-            <p style={{ margin: 0, fontSize: 15, color: C.body, lineHeight: 1.72 }}>
-              Not just a severity flag. Every alert comes with the full evidence package: risk score, SHAP explanation, 30 days of behavioural history, peer comparison against same-role employees, and every linked prior incident for that user.
-            </p>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}>
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, overflow: 'hidden' }}>
-              <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.border}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: C.red, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${C.red}`, borderRadius: 2, padding: '2px 6px' }}>Critical</span>
-                  <span style={{ fontSize: 26, fontWeight: 800, color: C.red, lineHeight: 1 }}>94</span>
-                </div>
-                <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: C.primary }}>Bulk Data Export Detected</p>
-                <p style={{ margin: 0, fontSize: 11, color: C.muted }}>James Sterling · Treasury Dept · 2 minutes ago</p>
-              </div>
-              <div style={{ padding: '16px 16px 18px' }}>
-                <p style={{ margin: '0 0 14px', fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Top Risk Factors (SHAP)</p>
-                {SHAP_MOCK.map(({ feature, value, positive }, idx) => (
-                  <div key={feature} style={{ marginBottom: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 10, color: C.muted, fontFamily: 'monospace' }}>{feature}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: positive ? C.red : C.green }}>{positive ? '+' : '−'}{value}</span>
-                    </div>
-                    <div style={{ height: 3, background: C.border, borderRadius: 1, overflow: 'hidden' }}>
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: `${Math.min((value / 30) * 100, 100)}%` }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, ease: 'easeOut', delay: idx * 0.08 }}
-                        style={{ height: '100%', background: positive ? C.red : C.green, borderRadius: 1 }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+      {/* Facts */}
+      <section style={{ ...WRAP, paddingTop: 112 }}>
+        <div className="stat-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
+          {FACTS.map(f => (
+            <div key={f.value} style={{ borderTop: `1px solid ${C.borderStrong}`, paddingTop: 20 }}>
+              <p style={display(36, '-0.02em')}>{f.value}</p>
+              <p style={{ margin: '12px 0 6px', fontSize: 14, lineHeight: 1.5, color: C.textBody, maxWidth: 320 }}>{f.label}</p>
+              <p style={mono(12, C.textFaint)}>{f.source}</p>
             </div>
-          </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* ── Environments ── */}
-      <section style={{ background: C.card, borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px' }}>
-          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-            style={{ marginBottom: 48 }}
-          >
-            <p style={{ margin: '0 0 12px', fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Built for</p>
-            <h2 style={{ margin: 0, fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 800, color: C.primary, letterSpacing: '-0.02em', lineHeight: 1.15, maxWidth: 560 }}>
-              High-stakes environments where insider risk is existential.
-            </h2>
-          </motion.div>
-          <motion.div
-            variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, background: C.border, border: `1px solid ${C.border}`, borderRadius: 4, overflow: 'hidden' }}
-          >
-            {ENVIRONMENTS.map(({ title, desc, tags }) => (
-              <motion.div key={title} variants={fadeInUp}
-                whileHover={{ backgroundColor: C.panel, transition: { duration: 0.15 } }}
-                style={{ background: C.bg, padding: '28px 28px', cursor: 'default' }}
-              >
-                <p style={{ margin: '0 0 10px', fontSize: 16, fontWeight: 700, color: C.primary, letterSpacing: '-0.01em' }}>{title}</p>
-                <p style={{ margin: '0 0 16px', fontSize: 14, color: C.body, lineHeight: 1.65 }}>{desc}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {tags.map(t => (
-                    <span key={t} style={{ fontSize: 13, color: C.muted }}>· {t}</span>
-                  ))}
+      {/* Feature: baselines */}
+      <Feature
+        id="scoring"
+        heading="Measured against themselves, not their job title."
+        body="A teller who always logs in at 7am and one who works late shifts should not trip the same wire. Every employee gets a 30-day behavioural baseline covering login hours, download volumes, departments touched, and locations."
+        visual={<BaselineVisual />}
+      />
+
+      {/* Feature: ensemble */}
+      <Feature
+        reverse
+        heading="Three models read every event, and their disagreement is a signal."
+        body="An Isolation Forest catches one-off outliers, an LSTM autoencoder catches sequences that drift, and XGBoost applies what analysts have already confirmed. Their weighted score becomes a single 0 to 100 risk number."
+        visual={<EnsembleVisual />}
+      />
+
+      {/* Feature: explainability */}
+      <Feature
+        id="explain"
+        heading="Every score comes with its reasons attached."
+        body="SHAP attribution shows which behaviours pushed the score up or down, and by how much. Analysts see evidence, not a black-box flag, and can defend the decision to anyone who asks."
+        visual={<ShapVisual />}
+      />
+
+      {/* Workflow */}
+      <section id="workflow" style={{ ...WRAP, paddingTop: 128 }}>
+        <h2 style={{ ...display(36, '-0.02em'), maxWidth: 640 }}>From event to decision in under thirty seconds.</h2>
+        <ol className="steps-grid" style={{ listStyle: 'none', padding: 0, margin: '48px 0 0', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32 }}>
+          {STEPS.map((s, i) => (
+            <li key={s.title} style={{ borderTop: `1px solid ${C.borderStrong}`, paddingTop: 20 }}>
+              <span style={mono(12)}>Step {i + 1}</span>
+              <h3 style={{ ...display(22, '-0.005em'), marginTop: 10 }}>{s.title}</h3>
+              <p style={{ margin: '10px 0 0', fontSize: 14, lineHeight: 1.6, color: C.textBody }}>{s.body}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* Sectors */}
+      <section id="sectors" style={{ ...WRAP, paddingTop: 128 }}>
+        <div className="split-2" style={{ display: 'grid', gridTemplateColumns: '4fr 8fr', gap: 64 }}>
+          <div>
+            <h2 style={{ ...display(36, '-0.02em'), position: 'sticky', top: 32 }}>Built for places where one person can do real damage.</h2>
+          </div>
+          <div>
+            {SECTORS.map((s, i) => (
+              <div key={s.title} className="split-2" style={{
+                display: 'grid', gridTemplateColumns: '5fr 7fr', gap: 32,
+                padding: '28px 0',
+                borderTop: `1px solid ${C.border}`,
+                borderBottom: i === SECTORS.length - 1 ? `1px solid ${C.border}` : 'none',
+              }}>
+                <h3 style={display(22, '-0.005em')}>{s.title}</h3>
+                <div>
+                  <p className="serif" style={{ ...serifBody, fontSize: 17 }}>{s.body}</p>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: '14px 0 0', display: 'flex', flexWrap: 'wrap', gap: '6px 18px' }}>
+                    {s.points.map(p => <li key={p} style={mono(12)}>{p}</li>)}
+                  </ul>
                 </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Frameworks strip ── */}
-      <section style={{ borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {FRAMEWORKS.map((name, i) => (
-              <div key={name} style={{ display: 'flex', alignItems: 'center' }}>
-                {i > 0 && <span style={{ width: 1, height: 12, background: C.border, display: 'inline-block', margin: '0 16px' }} />}
-                <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, letterSpacing: '0.04em' }}>{name}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-          style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px' }}
-        >
-          <p style={{ margin: '0 0 16px', fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>The next incident</p>
-          <h2 style={{ margin: '0 0 14px', fontSize: 'clamp(24px, 4vw, 40px)', fontWeight: 800, color: C.primary, letterSpacing: '-0.02em', lineHeight: 1.1, maxWidth: 580 }}>
-            The next insider attack is already in progress.
+      {/* Closing */}
+      <section style={{ ...WRAP, paddingTop: 144, paddingBottom: 112 }}>
+        <div style={{ background: C.card, borderRadius: 4, boxShadow: SHADOW.card, padding: 'clamp(32px, 6vw, 72px)' }}>
+          <h2 style={{ ...display(54, '-0.025em'), fontSize: 'clamp(32px, 5vw, 54px)', maxWidth: 760 }}>
+            Watch it score a live workforce.
           </h2>
-          <p style={{ margin: '0 0 36px', color: C.body, fontSize: 15, maxWidth: 420, lineHeight: 1.65 }}>
-            SentinelIQ surfaces it before the damage is done.
+          <p className="serif" style={{ ...serifBody, marginTop: 20, maxWidth: 560 }}>
+            The demo runs fifty synthetic bank employees through the full pipeline in real time. Trigger an attack scenario and follow it from first event to closed case.
           </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <motion.div whileHover={{ scale: 1.04 }} whileTap={BTN_TAP}>
-              <Link href="/dashboard" style={{
-                fontSize: 13, fontWeight: 700, letterSpacing: '0.02em',
-                padding: '11px 24px', borderRadius: 3,
-                background: C.primary, color: C.bg, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                Get a Demo →
-              </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={BTN_TAP}>
-              <a href="#" style={{
-                fontSize: 13, fontWeight: 600, padding: '11px 24px', borderRadius: 3,
-                background: 'transparent', color: C.primary,
-                border: `1px solid ${C.border}`, textDecoration: 'none', display: 'block',
-              }}>
-                Contact Enterprise Sales
-              </a>
-            </motion.div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ── Footer ── */}
-      <footer style={{ borderTop: `1px solid ${C.border}` }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" aria-hidden="true" style={{ height: 20, width: 'auto', display: 'block' }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: C.primary }}>SentinelIQ</span>
-          </div>
-          <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-            <a href="https://github.com/TeamSigmoidIdea20/sentineliq" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: C.muted, textDecoration: 'none' }}>GitHub</a>
-            <Link href="/dashboard" style={{ fontSize: 12, color: C.muted, textDecoration: 'none' }}>Demo</Link>
-            <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 2, padding: '2px 7px', letterSpacing: '0.06em' }}>ISO 27001</span>
+          <div style={{ display: 'flex', gap: 10, marginTop: 32, flexWrap: 'wrap' }}>
+            <Link href="/dashboard" className="btn btn-ink">Open the live dashboard</Link>
+            <Link href="/dashboard/alerts" className="btn btn-linen">Go to the alert queue</Link>
           </div>
         </div>
-      </footer>
+      </section>
 
+      {/* Footer */}
+      <footer style={{ ...WRAP, paddingBottom: 48 }}>
+        <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 32, borderTop: `1px solid ${C.border}`, paddingTop: 40 }}>
+          <div>
+            <Wordmark />
+            <p style={{ margin: '14px 0 0', fontSize: 13, color: C.textMuted, maxWidth: 280, lineHeight: 1.55 }}>
+              Insider threat detection with per-user baselines and explainable scoring.
+            </p>
+          </div>
+          <FooterCol title="Product" links={[['Overview', '/dashboard'], ['Alerts', '/dashboard/alerts'], ['Cases', '/dashboard/cases'], ['Users', '/dashboard/users']]} />
+          <FooterCol title="Models" links={[['Intelligence', '/dashboard/intelligence'], ['How scoring works', '#scoring'], ['Explainability', '#explain']]} />
+          <FooterCol title="Project" links={[['GitHub', 'https://github.com/shanshantanusingh113-max/sentineliq'], ['Workflow', '#workflow']]} />
+        </div>
+        <p style={{ ...mono(12, C.textFaint), marginTop: 40 }}>
+          {STACK.join('  /  ')}
+        </p>
+      </footer>
     </div>
+  )
+}
+
+// ── Sections ─────────────────────────────────────────────
+
+function Feature({ id, heading, body, visual, reverse }: { id?: string; heading: string; body: string; visual: React.ReactNode; reverse?: boolean }) {
+  const text = (
+    <div style={{ alignSelf: 'center' }}>
+      <h2 style={{ ...display(26, '-0.012em'), maxWidth: 440 }}>{heading}</h2>
+      <p className="serif" style={{ ...serifBody, fontSize: 17, marginTop: 16, maxWidth: 440 }}>{body}</p>
+    </div>
+  )
+  return (
+    <section id={id} style={{ ...WRAP, paddingTop: 128 }}>
+      <div className="split-2" style={{ display: 'grid', gridTemplateColumns: reverse ? '6fr 4fr' : '4fr 6fr', gap: 64 }}>
+        {reverse ? <>{visual}{text}</> : <>{text}{visual}</>}
+      </div>
+    </section>
+  )
+}
+
+function FooterCol({ title, links }: { title: string; links: [string, string][] }) {
+  return (
+    <div>
+      <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: C.textPrimary }}>{title}</p>
+      <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0 0', display: 'grid', gap: 8 }}>
+        {links.map(([label, href]) => (
+          <li key={label}>
+            {href.startsWith('http')
+              ? <a href={href} target="_blank" rel="noopener noreferrer" className="link-quiet" style={{ fontSize: 13 }}>{label}</a>
+              : <Link href={href} className="link-quiet" style={{ fontSize: 13 }}>{label}</Link>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+// ── Product window (hero) ────────────────────────────────
+
+function WindowFrame({ title, tabs, children }: { title: string; tabs?: string[]; children: React.ReactNode }) {
+  return (
+    <div style={{ background: C.card, borderRadius: 4, boxShadow: SHADOW.card, overflow: 'hidden' }}>
+      <div style={{ height: 36, display: 'flex', alignItems: 'center', padding: '0 14px', borderBottom: `1px solid ${C.border}`, position: 'relative' }}>
+        <div style={{ display: 'flex', gap: 6 }} aria-hidden="true">
+          {[0, 1, 2].map(i => <span key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: C.borderStrong }} />)}
+        </div>
+        <span style={{ position: 'absolute', left: 0, right: 0, textAlign: 'center', fontSize: 13, color: C.textMuted, pointerEvents: 'none' }}>{title}</span>
+      </div>
+      {tabs && (
+        <div style={{ display: 'flex', gap: 0, padding: '0 14px', borderBottom: `1px solid ${C.border}`, background: C.panel }}>
+          {tabs.map((t, i) => (
+            <span key={t} style={{
+              ...mono(12, i === 0 ? C.textPrimary : C.textMuted),
+              padding: '9px 12px',
+              borderBottom: i === 0 ? `1px solid ${C.textPrimary}` : '1px solid transparent',
+              marginBottom: -1,
+            }}>{t}</span>
+          ))}
+        </div>
+      )}
+      {children}
+    </div>
+  )
+}
+
+function ProductWindow() {
+  const max = 30
+  return (
+    <WindowFrame title="SentinelIQ - Alert queue" tabs={['queue.open', 'cases', 'intelligence']}>
+      <div className="alert-demo-grid" style={{ display: 'grid', gridTemplateColumns: '360px 1fr', minHeight: 440, background: C.bg }}>
+        {/* Queue */}
+        <div style={{ borderRight: `1px solid ${C.border}` }}>
+          <div style={{ padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span style={{ fontSize: 13, color: C.textPrimary }}>Open alerts</span>
+            <span style={mono(12)}>4 above 50</span>
+          </div>
+          {QUEUE.map((a, i) => {
+            const active = i === 0
+            const col = a.score >= 65 ? C.critical : C.medium
+            return (
+              <div key={a.id} style={{
+                padding: '13px 18px',
+                borderTop: `1px solid ${C.border}`,
+                background: active ? C.card : 'transparent',
+                boxShadow: active ? `inset 2px 0 0 ${C.textPrimary}` : 'none',
+                display: 'grid', gridTemplateColumns: '1fr auto', gap: 4,
+              }}>
+                <span style={{ fontSize: 14, color: C.textPrimary }}>{a.user}</span>
+                <span style={{ fontSize: 14, color: col, fontVariantNumeric: 'tabular-nums' }}>{a.score}</span>
+                <span style={{ fontSize: 13, color: C.textMuted }}>{a.type}</span>
+                <span style={mono(12, C.textFaint)}>{a.at}</span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Case detail */}
+        <div style={{ padding: '24px 28px', display: 'grid', gap: 22, alignContent: 'start' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+            <div>
+              <span style={mono(12)}>alert a3f9b2c / T1530</span>
+              <p style={{ ...display(26, '-0.012em'), marginTop: 6 }}>Bulk data export</p>
+              <p style={{ margin: '4px 0 0', fontSize: 13, color: C.textMuted }}>James Sterling, Treasury officer</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontSize: 54, lineHeight: 1, letterSpacing: '-0.03em', color: C.critical, fontVariantNumeric: 'tabular-nums' }}>94</span>
+              <p style={{ ...mono(12), margin: '4px 0 0' }}>risk / 100</p>
+            </div>
+          </div>
+
+          <p className="serif" style={{ ...serifBody, fontSize: 17, maxWidth: 560, borderLeft: `2px solid ${C.borderStrong}`, paddingLeft: 16 }}>
+            At 02:14, five hours outside his usual window, James exported 4.2 GB of customer records from three departments he has not touched in thirty days.
+          </p>
+
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, color: C.textPrimary }}>What drove the score</span>
+              <span style={mono(12, C.textFaint)}>SHAP, XGBoost</span>
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {SHAP.map(s => {
+                const pos = s.value > 0
+                return (
+                  <div key={s.feature} style={{ display: 'grid', gridTemplateColumns: '200px 1fr 48px', alignItems: 'center', gap: 12 }}>
+                    <span style={{ ...mono(12, C.textBody), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.feature}</span>
+                    <div style={{ height: 6, background: C.hover, borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${Math.min(Math.abs(s.value) / max, 1) * 100}%`, background: pos ? C.critical : C.low, borderRadius: 2 }} />
+                    </div>
+                    <span style={{ ...mono(12, pos ? C.critical : C.low), textAlign: 'right' }}>{pos ? '+' : '-'}{Math.abs(s.value).toFixed(1)}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span className="btn btn-ink btn-sm" aria-hidden="true">Escalate</span>
+            <span className="btn btn-linen btn-sm" aria-hidden="true">Mark as false positive</span>
+            <span style={{ ...mono(12, C.textFaint), marginLeft: 'auto' }}>IF 0.91 / LSTM 0.96 / XGB 0.88</span>
+          </div>
+        </div>
+      </div>
+    </WindowFrame>
+  )
+}
+
+// ── Feature visuals ──────────────────────────────────────
+
+function BaselineVisual() {
+  // 24 hourly bars: this user's normal activity, with tonight's event marked.
+  const normal = [0, 0, 0, 0, 0, 0, 1, 4, 8, 9, 9, 8, 6, 8, 9, 8, 7, 4, 1, 0, 0, 0, 0, 0]
+  return (
+    <WindowFrame title="Baseline - James Sterling">
+      <div style={{ padding: '24px 24px 20px', background: C.bg }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 20 }}>
+          <span style={{ fontSize: 13, color: C.textPrimary }}>Login hour, last 30 days</span>
+          <span style={mono(12)}>usual window 07:00 - 18:00</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(24, 1fr)', gap: 4, alignItems: 'end', height: 140 }}>
+          {normal.map((v, h) => {
+            const flagged = h === 2
+            return (
+              <div key={h} style={{
+                height: flagged ? '62%' : `${Math.max(v / 9, 0.03) * 100}%`,
+                background: flagged ? C.critical : v === 0 ? C.border : C.borderStrong,
+                borderRadius: 2,
+              }} />
+            )
+          })}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+          {['00', '06', '12', '18', '23'].map(t => <span key={t} style={mono(12, C.textFaint)}>{t}</span>)}
+        </div>
+        <p style={{ margin: '18px 0 0', fontSize: 13, color: C.textBody }}>
+          <span style={{ color: C.critical }}>02:14 tonight</span> is 5.1 standard deviations from his own pattern.
+        </p>
+      </div>
+    </WindowFrame>
+  )
+}
+
+function EnsembleVisual() {
+  const models = [
+    { name: 'Isolation Forest', role: 'point outliers', weight: 0.4, score: 91 },
+    { name: 'LSTM autoencoder', role: 'sequence drift', weight: 0.4, score: 96 },
+    { name: 'XGBoost', role: 'learned from labels', weight: 0.2, score: 88 },
+  ]
+  return (
+    <WindowFrame title="Ensemble - event 8f21c">
+      <div style={{ background: C.bg }}>
+        {models.map(m => (
+          <div key={m.name} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 48px', gap: 16, alignItems: 'center', padding: '16px 24px', borderBottom: `1px solid ${C.border}` }}>
+            <div>
+              <p style={{ margin: 0, fontSize: 14, color: C.textPrimary }}>{m.name}</p>
+              <p style={{ margin: '2px 0 0', ...mono(12) }}>{m.role} / weight {m.weight}</p>
+            </div>
+            <div style={{ height: 6, background: C.hover, borderRadius: 2 }}>
+              <div style={{ width: `${m.score}%`, height: '100%', background: C.textPrimary, borderRadius: 2 }} />
+            </div>
+            <span style={{ ...mono(13, C.textPrimary), textAlign: 'right' }}>{m.score}</span>
+          </div>
+        ))}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '20px 24px' }}>
+          <span style={{ fontSize: 13, color: C.textMuted }}>Weighted risk score</span>
+          <span style={{ fontSize: 36, letterSpacing: '-0.02em', color: C.critical, lineHeight: 1 }}>94</span>
+        </div>
+      </div>
+    </WindowFrame>
+  )
+}
+
+function ShapVisual() {
+  return (
+    <WindowFrame title="Attribution - alert a3f9b2c">
+      <div style={{ padding: 24, background: C.bg }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginBottom: 14 }}>
+          <span style={mono(12, C.low)}>lowers risk</span>
+          <span style={{ ...mono(12, C.critical), textAlign: 'right' }}>raises risk</span>
+        </div>
+        <div style={{ display: 'grid', gap: 12 }}>
+          {SHAP.map(s => {
+            const pos = s.value > 0
+            const w = `${Math.min(Math.abs(s.value) / 30, 1) * 50}%`
+            return (
+              <div key={s.feature}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <span style={mono(12, C.textBody)}>{s.feature}</span>
+                  <span style={mono(12, pos ? C.critical : C.low)}>{pos ? '+' : '-'}{Math.abs(s.value).toFixed(1)}</span>
+                </div>
+                <div style={{ position: 'relative', height: 6, background: C.hover, borderRadius: 2 }}>
+                  <span style={{ position: 'absolute', left: '50%', top: -3, bottom: -3, width: 1, background: C.borderStrong }} />
+                  <span style={{
+                    position: 'absolute', top: 0, bottom: 0, borderRadius: 2,
+                    background: pos ? C.critical : C.low,
+                    width: w,
+                    left: pos ? '50%' : `calc(50% - ${w})`,
+                  }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </WindowFrame>
   )
 }

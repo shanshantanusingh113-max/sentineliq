@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import CommandPalette from '@/components/CommandPalette'
 import { api, type Alert, type User } from '@/lib/api'
-import { C } from '@/lib/tokens'
+import { C, SHADOW } from '@/lib/tokens'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -64,26 +64,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      {backendStatus === 'offline' && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-          background: '#7C2D12', borderBottom: `1px solid ${C.critical}`,
-          padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8,
-          fontSize: 11, color: '#FEF2F2', fontFamily: 'inherit',
+      {backendStatus !== 'ok' && (
+        <div role="status" style={{
+          position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 9999,
+          background: C.ink, color: C.onInk, borderRadius: 4, boxShadow: SHADOW.popover,
+          padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
+          fontSize: 13, maxWidth: 'calc(100vw - 32px)',
         }}>
-          <span style={{ fontWeight: 700 }}>BACKEND OFFLINE</span>
-          <span style={{ color: '#FECACA' }}>- data may be stale. Retrying every 30s.</span>
-        </div>
-      )}
-      {backendStatus === 'initializing' && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-          background: '#431407', borderBottom: `1px solid ${C.amber}`,
-          padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8,
-          fontSize: 11, color: '#FEF3C7', fontFamily: 'inherit',
-        }}>
-          <span style={{ fontWeight: 700, color: C.amber }}>INITIALIZING</span>
-          <span style={{ color: '#FDE68A' }}>- training ML models, seeding demo data (~30s). Dashboard will populate automatically.</span>
+          <span className="animate-pulse-dot" style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: backendStatus === 'offline' ? C.critical : C.medium }} />
+          {backendStatus === 'offline'
+            ? <span>Can&apos;t reach the scoring service. Showing the last data received and retrying every 30 seconds.</span>
+            : <span>Training models and loading the demo workforce. This takes about 30 seconds.</span>}
         </div>
       )}
       {children}

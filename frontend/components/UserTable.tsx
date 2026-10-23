@@ -3,14 +3,14 @@
 import { useMemo } from 'react'
 import { Star } from 'lucide-react'
 import type { User } from '@/lib/api'
-import { timeAgo } from '@/lib/api'
-import { C, riskColor, riskLevel } from '@/lib/tokens'
+import { timeAgo, formatFraudType } from '@/lib/api'
+import { C, FONT, riskColor, riskLevel } from '@/lib/tokens'
 import RiskBadge from './RiskBadge'
 
 function TrendArrow({ trend }: { trend?: string }) {
-  if (trend === 'up') return <span style={{ fontSize: 13, color: C.critical, fontWeight: 700 }}>↑</span>
-  if (trend === 'down') return <span style={{ fontSize: 13, color: C.low, fontWeight: 700 }}>↓</span>
-  return <span style={{ fontSize: 13, color: C.textMuted }}>→</span>
+  if (trend === 'up') return <span aria-label="rising" style={{ fontSize: 13, color: C.critical }}>↑</span>
+  if (trend === 'down') return <span aria-label="falling" style={{ fontSize: 13, color: C.low }}>↓</span>
+  return <span aria-label="steady" style={{ fontSize: 13, color: C.textFaint }}>→</span>
 }
 
 function MiniSparkline({ score, userId, trend }: { score: number; userId: string; trend?: string }) {
@@ -48,12 +48,12 @@ interface Props {
 export default function UserTable({ users, loading, onSelectUser, watchlist, onToggleWatchlist, restrictedUsers }: Props) {
   if (loading) {
     return (
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4 }}>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4 }} aria-busy="true">
         {[...Array(8)].map((_, i) => (
-          <div key={i} style={{ height: 52, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#30363D' }} />
-            {[100, 80, 60, 50, 70].map((w, j) => (
-              <div key={j} style={{ height: 10, width: w, background: '#30363D', borderRadius: 2 }} />
+          <div key={i} style={{ height: 56, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 16 }}>
+            <div className="skeleton" style={{ width: 30, height: 30, borderRadius: '50%' }} />
+            {[140, 90, 90, 60, 70].map((w, j) => (
+              <div key={j} className="skeleton" style={{ height: 11, width: w }} />
             ))}
           </div>
         ))}
@@ -61,16 +61,19 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
     )
   }
 
+  const cell = { padding: '11px 16px', whiteSpace: 'nowrap' } as const
+  const tag = (color: string, wash: string, text: string) => (
+    <span style={{ fontSize: 12, color, background: wash, borderRadius: 4, padding: '1px 7px', marginLeft: 2 }}>{text}</span>
+  )
+
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, overflow: 'hidden' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: 720 }}>
         <thead>
           <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-            {onToggleWatchlist && (
-              <th style={{ width: 36, padding: '10px 14px' }} />
-            )}
-            {['User', 'Role', 'Department', 'Risk Score', 'Last Active', ''].map((h) => (
-              <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: C.textMuted, fontWeight: 600, fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            {onToggleWatchlist && <th style={{ width: 40, ...cell }}><span style={{ position: 'absolute', left: -9999 }}>Watchlist</span></th>}
+            {['Person', 'Role', 'Department', 'Risk', 'Last active', ''].map((h) => (
+              <th key={h} style={{ ...cell, textAlign: 'left', color: C.textMuted, fontWeight: 400, fontSize: 13 }}>
                 {h}
               </th>
             ))}
@@ -84,6 +87,7 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
             return (
               <tr
                 key={user.id}
+                className="row-hover"
                 tabIndex={onSelectUser ? 0 : undefined}
                 role={onSelectUser ? 'button' : undefined}
                 aria-label={onSelectUser ? `View profile for ${user.name}` : undefined}
@@ -92,93 +96,67 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
                 style={{
                   borderBottom: `1px solid ${C.border}`,
                   cursor: onSelectUser ? 'pointer' : 'default',
-                  background: isWatched ? C.hover : 'transparent',
-                  transition: 'background 0.1s',
+                  background: C.bg,
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.hover }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isWatched ? C.hover : 'transparent' }}
               >
                 {onToggleWatchlist && (
-                  <td style={{ padding: '10px 14px', width: 36 }}>
+                  <td style={{ ...cell, width: 40 }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); onToggleWatchlist(user.id) }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}
-                      aria-label={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
+                      aria-label={isWatched ? `Remove ${user.name} from watchlist` : `Add ${user.name} to watchlist`}
+                      aria-pressed={isWatched}
                     >
-                      <Star
-                        size={14}
-                        color={isWatched ? C.amber : C.textMuted}
-                        fill={isWatched ? C.amber : 'none'}
-                        strokeWidth={2}
-                      />
+                      <Star size={14} color={isWatched ? C.amber : C.textFaint} fill={isWatched ? C.amber : 'none'} strokeWidth={1.6} />
                     </button>
                   </td>
                 )}
-                <td style={{ padding: '10px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <td style={cell}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div
+                      aria-hidden="true"
                       style={{
                         width: 30, height: 30, borderRadius: '50%',
-                        background: riskColor(user.risk_score),
+                        background: C.hover, boxShadow: `inset 0 0 0 1.5px ${riskColor(user.risk_score)}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 11, fontWeight: 700, color: '#F0F6FC', flexShrink: 0,
+                        fontSize: 12, color: C.textPrimary, flexShrink: 0,
                       }}
                     >
                       {user.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                     </div>
                     <div>
-                      <p style={{ margin: 0, color: C.textPrimary, fontWeight: 500, fontSize: 12 }}>{user.name}</p>
-                      <p style={{ margin: 0, color: C.textMuted, fontSize: 10 }}>{user.id}</p>
+                      <p style={{ margin: 0, color: C.textPrimary, fontSize: 14 }}>{user.name}</p>
+                      <p style={{ margin: 0, color: C.textFaint, fontSize: 12, fontFamily: FONT.mono }}>{user.id}</p>
                     </div>
-                    {isWatched && (
-                      <span style={{
-                        fontSize: 8, fontWeight: 700, color: C.amber,
-                        border: `1px solid ${C.amber}`, borderRadius: 2,
-                        padding: '1px 5px', letterSpacing: '0.05em', marginLeft: 4,
-                      }}>
-                        WATCH
-                      </span>
-                    )}
-                    {isRestricted && (
-                      <span style={{
-                        fontSize: 8, fontWeight: 700, color: C.critical,
-                        border: `1px solid ${C.critical}`, borderRadius: 2,
-                        padding: '1px 5px', letterSpacing: '0.05em', marginLeft: 4,
-                      }}>
-                        RESTRICTED
-                      </span>
-                    )}
+                    {isWatched && tag(C.amber, C.mediumWash, 'Watching')}
+                    {isRestricted && tag(C.critical, C.criticalWash, 'Restricted')}
                   </div>
                 </td>
-                <td style={{ padding: '10px 14px', color: C.textMuted, textTransform: 'capitalize' }}>
-                  {user.role.replace('_', ' ')}
+                <td style={{ ...cell, color: C.textBody }}>
+                  {formatFraudType(user.role)}
                 </td>
-                <td style={{ padding: '10px 14px', color: C.textMuted }}>
-                  {user.department.replace('_', ' ')}
+                <td style={{ ...cell, color: C.textBody }}>
+                  {formatFraudType(user.department)}
                 </td>
-                <td style={{ padding: '10px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: riskColor(user.risk_score) }}>
+                <td style={cell}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16, color: riskColor(user.risk_score), fontVariantNumeric: 'tabular-nums', minWidth: 22 }}>
                       {Math.round(user.risk_score)}
                     </span>
                     <TrendArrow trend={user.risk_trend} />
                     <RiskBadge level={level} size="sm" />
                   </div>
                 </td>
-                <td style={{ padding: '10px 14px', color: C.textMuted }}>
+                <td style={{ ...cell, color: C.textMuted, fontSize: 13 }}>
                   {timeAgo(user.last_seen)}
                 </td>
-                <td style={{ padding: '10px 14px' }}>
+                <td style={{ ...cell, textAlign: 'right' }}>
                   {onSelectUser && (
                     <button
+                      className="btn btn-ghost btn-sm"
                       onClick={(e) => { e.stopPropagation(); onSelectUser(user.id) }}
-                      style={{
-                        fontSize: 10, padding: '4px 8px', borderRadius: 3,
-                        background: 'transparent', border: `1px solid ${C.border}`,
-                        color: C.textMuted, cursor: 'pointer', fontWeight: 600, letterSpacing: '0.04em',
-                      }}
                     >
-                      VIEW
+                      View profile
                     </button>
                   )}
                 </td>
@@ -189,8 +167,8 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
       </table>
 
       {users.length === 0 && (
-        <div style={{ padding: 32, textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
-          No users found.
+        <div style={{ padding: 40, textAlign: 'center', color: C.textMuted, fontSize: 14 }}>
+          No one matches this view. Clear the search or filters to see the full workforce.
         </div>
       )}
     </div>

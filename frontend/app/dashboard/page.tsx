@@ -10,13 +10,14 @@ import LiveFeed from '@/components/LiveFeed'
 import AlertPanel from '@/components/AlertPanel'
 import UserTable from '@/components/UserTable'
 import { api, type Alert, type Stats, type User, formatFraudType } from '@/lib/api'
-import { C } from '@/lib/tokens'
+import { C, SHADOW, riskColor } from '@/lib/tokens'
+import PageHeader, { LiveStatus, SectionTitle } from '@/components/PageHeader'
 
 const _SIMULATE_SCENARIOS = [
-  { label: 'Bulk Data Exfiltration', scenario: 'bulk_exfiltration' },
-  { label: 'Privilege Escalation', scenario: 'privilege_escalation' },
-  { label: 'Off-Hours Treasury Access', scenario: 'off_hours_treasury' },
-  { label: 'Account Record Tampering', scenario: 'account_tampering' },
+  { label: 'Bulk data exfiltration', scenario: 'bulk_exfiltration' },
+  { label: 'Privilege escalation', scenario: 'privilege_escalation' },
+  { label: 'Off-hours treasury access', scenario: 'off_hours_treasury' },
+  { label: 'Account record tampering', scenario: 'account_tampering' },
 ]
 
 export default function DashboardPage() {
@@ -122,66 +123,49 @@ export default function DashboardPage() {
       <Sidebar />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-        {/* Topbar */}
-        <div style={{ height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: `1px solid ${C.border}`, background: C.card, flexShrink: 0 }}>
-          <h1 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textPrimary }}>Fraud Intelligence Overview</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            {simToast && (
-              <span style={{ fontSize: 11, color: C.medium, fontWeight: 600 }}>{simToast}</span>
+        <PageHeader title="Overview" description="Live scoring across the monitored workforce">
+          {simToast && <span role="status" style={{ fontSize: 13, color: C.textMuted }}>{simToast}</span>}
+          <div ref={simRef} style={{ position: 'relative' }}>
+            <button
+              className="btn btn-linen btn-sm"
+              aria-haspopup="menu"
+              aria-expanded={simOpen}
+              onClick={() => setSimOpen((o) => !o)}
+            >
+              Simulate an attack
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+            </button>
+            {simOpen && (
+              <div role="menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', background: C.bg, borderRadius: 8, zIndex: 50, minWidth: 260, boxShadow: SHADOW.popover, padding: 6 }}>
+                <p style={{ margin: 0, padding: '8px 10px 6px', fontSize: 12, color: C.textMuted }}>Inject one scored event into the live stream</p>
+                {_SIMULATE_SCENARIOS.map(({ label, scenario }) => (
+                  <button
+                    key={scenario}
+                    role="menuitem"
+                    className="row-hover"
+                    onClick={async () => {
+                      setSimOpen(false)
+                      setSimToast(`Injecting ${label.toLowerCase()}...`)
+                      try {
+                        await api.simulate(scenario)
+                        setSimToast(`${label} injected. Watch the queue.`)
+                        setTimeout(() => { fetchAlerts(); fetchStats() }, 1500)
+                        setTimeout(() => { fetchAlerts(); fetchStats() }, 4000)
+                      } catch {
+                        setSimToast('Simulation failed. The scoring service is still starting.')
+                      }
+                      setTimeout(() => setSimToast(''), 8000)
+                    }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 10px', fontSize: 14, color: C.textPrimary, background: 'transparent', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             )}
-            <div ref={simRef} style={{ position: 'relative' }}>
-              <button
-                onClick={() => setSimOpen((o) => !o)}
-                style={{ padding: '5px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted, borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                Simulate ▾
-              </button>
-              {simOpen && (
-                <div style={{ position: 'absolute', right: 0, top: '110%', background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, zIndex: 50, minWidth: 210, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
-                  {_SIMULATE_SCENARIOS.map(({ label, scenario }, idx, arr) => (
-                    <button
-                      key={scenario}
-                      onClick={async () => {
-                        setSimOpen(false)
-                        setSimToast(`Simulating ${label}…`)
-                        try {
-                          await api.simulate(scenario)
-                          setSimToast(`${label} injected - alert incoming`)
-                          // Force an immediate poll to catch the new alert
-                          setTimeout(() => { fetchAlerts(); fetchStats() }, 1500)
-                          setTimeout(() => { fetchAlerts(); fetchStats() }, 4000)
-                        } catch {
-                          setSimToast('Simulate failed - backend may be starting up')
-                        }
-                        setTimeout(() => setSimToast(''), 8000)
-                      }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', fontSize: 12, color: C.textPrimary, background: 'transparent', border: 'none', borderBottom: idx < arr.length - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.hover }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              {lastUpdated && (
-                <span style={{ fontSize: 10, color: C.textMuted, fontFamily: 'monospace' }}>
-                  {lastUpdated.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                </span>
-              )}
-              <span style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-                padding: '3px 8px', borderRadius: 2,
-                border: `1px solid ${backendStatus === 'ok' ? C.low : backendStatus === 'initializing' ? C.amber : C.critical}`,
-                color: backendStatus === 'ok' ? C.low : backendStatus === 'initializing' ? C.amber : C.critical,
-              }}>
-                {backendStatus === 'ok' ? 'SYS ONLINE' : backendStatus === 'initializing' ? 'INITIALIZING' : 'SYS OFFLINE'}
-              </span>
-            </div>
           </div>
-        </div>
+          <LiveStatus status={backendStatus} updated={lastUpdated} />
+        </PageHeader>
 
         {/* New alert pop-up notification */}
         <AnimatePresence>
@@ -197,30 +181,25 @@ export default function DashboardPage() {
               <div
                 role="alert"
                 style={{
-                  background: '#1A2233', padding: '10px 24px',
-                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: C.card, padding: '10px 28px',
+                  display: 'flex', alignItems: 'center', gap: 12,
                   borderBottom: `1px solid ${C.border}`,
-                  borderLeft: `3px solid ${newAlertNotif.risk_level === 'critical' || newAlertNotif.risk_level === 'high' ? C.critical : newAlertNotif.risk_level === 'medium' ? C.medium : C.low}`,
                 }}
               >
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: newAlertNotif.risk_level === 'critical' || newAlertNotif.risk_level === 'high' ? C.critical : newAlertNotif.risk_level === 'medium' ? C.medium : C.low, flexShrink: 0, display: 'inline-block' }} />
-                <p style={{ margin: 0, fontSize: 12, color: C.textPrimary, fontWeight: 600, flex: 1 }}>
-                  New alert - <span style={{ fontWeight: 700 }}>{newAlertNotif.user_name}</span>
-                  {' · '}{newAlertNotif.fraud_type.replace(/_/g, ' ')}
-                  {' · '}score <span style={{ fontWeight: 800, color: newAlertNotif.risk_level === 'critical' || newAlertNotif.risk_level === 'high' ? C.critical : newAlertNotif.risk_level === 'medium' ? C.medium : C.low }}>{Math.round(newAlertNotif.risk_score)}</span>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: riskColor(newAlertNotif.risk_score), flexShrink: 0 }} />
+                <p style={{ margin: 0, fontSize: 14, color: C.textBody, flex: 1 }}>
+                  New alert for <span style={{ color: C.textPrimary }}>{newAlertNotif.user_name}</span>, {formatFraudType(newAlertNotif.fraud_type).toLowerCase()}, scored{' '}
+                  <span style={{ color: riskColor(newAlertNotif.risk_score), fontVariantNumeric: 'tabular-nums' }}>{Math.round(newAlertNotif.risk_score)}</span>
                 </p>
-                <button
-                  onClick={() => { setSelectedAlertId(newAlertNotif.id); setNewAlertNotif(null) }}
-                  style={{ fontSize: 11, color: C.textMuted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 3, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  View
+                <button className="btn btn-ink btn-sm" onClick={() => { setSelectedAlertId(newAlertNotif.id); setNewAlertNotif(null) }}>
+                  Open alert
                 </button>
                 <button
                   onClick={() => setNewAlertNotif(null)}
                   aria-label="Dismiss"
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textMuted, padding: 4, display: 'flex', flexShrink: 0 }}
                 >
-                  <X size={13} strokeWidth={2} />
+                  <X size={14} strokeWidth={1.6} />
                 </button>
               </div>
             </motion.div>
@@ -229,75 +208,62 @@ export default function DashboardPage() {
 
         {/* Coordinated activity banners */}
         {dismissedPatterns.size > 0 && activePatterns.length === 0 && (
-          <div style={{ padding: '6px 24px', background: C.card, borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ padding: '6px 28px', background: C.bg, borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'flex-end' }}>
             <button
               onClick={() => {
                 try { localStorage.removeItem('sentinel_dismissed_patterns') } catch {}
                 setDismissedPatterns(new Set())
               }}
-              style={{ fontSize: 10, color: C.textMuted, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}
+              style={{ fontSize: 12, color: C.textMuted, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}
             >
-              Reset dismissed alerts
+              Show dismissed notices
             </button>
           </div>
         )}
-        <AnimatePresence>
-          {activePatterns.map((cp) => (
-            <motion.div
-              key={cp.pattern}
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
-              style={{ flexShrink: 0 }}
+        {activePatterns.length > 0 && (
+          <div
+            role="alert"
+            style={{
+              background: C.criticalWash, padding: '11px 28px', flexShrink: 0,
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+              borderBottom: `1px solid ${C.border}`,
+            }}
+          >
+            <AlertTriangle size={15} color={C.critical} strokeWidth={1.6} style={{ flexShrink: 0, marginTop: 3 }} />
+            <p style={{ margin: 0, fontSize: 14, color: C.textBody, flex: 1, lineHeight: 1.6 }}>
+              <span style={{ color: C.critical }}>Coordinated activity in the {activePatterns[0].window}.</span>{' '}
+              {activePatterns.map((cp, i) => (
+                <span key={cp.pattern}>
+                  <Link href={`/dashboard/alerts?fraud_type=${cp.pattern}`} className="link-ember">{formatFraudType(cp.pattern).toLowerCase()}</Link>
+                  {' '}across {cp.users} people{i < activePatterns.length - 1 ? ', ' : '.'}
+                </span>
+              ))}
+            </p>
+            <button
+              onClick={() => setDismissedPatterns((prev) => {
+                const next = new Set(Array.from(prev).concat(activePatterns.map(cp => cp.pattern)))
+                try { localStorage.setItem('sentinel_dismissed_patterns', JSON.stringify(Array.from(next))) } catch {}
+                return next
+              })}
+              aria-label="Dismiss coordinated activity notice"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textMuted, padding: 4, display: 'flex', flexShrink: 0 }}
             >
-              <div
-                role="alert"
-                style={{
-                  background: C.critical, padding: '10px 24px',
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  borderBottom: '1px solid rgba(255,255,255,0.1)',
-                }}
-              >
-                <AlertTriangle size={15} color="#F0F6FC" strokeWidth={2} style={{ flexShrink: 0 }} />
-                <p style={{ margin: 0, fontSize: 13, color: '#F0F6FC', fontWeight: 600, flex: 1 }}>
-                  Coordinated Activity Detected:{' '}
-                  <span style={{ fontWeight: 700 }}>{formatFraudType(cp.pattern)}</span>
-                  {' '}across <span style={{ fontWeight: 700 }}>{cp.users} users</span> in the {cp.window}.{' '}
-                  <Link
-                    href={`/dashboard/alerts?fraud_type=${cp.pattern}`}
-                    style={{ color: '#F0F6FC', textDecoration: 'underline', fontSize: 13 }}
-                  >
-                    View pattern →
-                  </Link>
-                </p>
-                <button
-                  onClick={() => setDismissedPatterns((prev) => {
-                    const next = new Set(Array.from(prev).concat(cp.pattern))
-                    try { localStorage.setItem('sentinel_dismissed_patterns', JSON.stringify(Array.from(next))) } catch {}
-                    return next
-                  })}
-                  aria-label="Dismiss alert"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F0F6FC', padding: 4, display: 'flex', flexShrink: 0 }}
-                >
-                  <X size={15} strokeWidth={2} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+              <X size={14} strokeWidth={1.6} />
+            </button>
+          </div>
+        )}
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <main className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '24px 28px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
           {/* Stat cards */}
           <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
             <StatCard
-              label="Users Monitored"
+              label="People monitored"
               value={stats?.users_monitored ?? '-'}
               sub="active employees"
               loading={statsLoading}
             />
             <StatCard
-              label="Alerts 24h"
+              label="Alerts, last 24 hours"
               value={stats != null ? (stats.alerts_24h ?? stats.alerts_today ?? 0) : '-'}
               change={stats?.alerts_change}
               sub="vs prior 24h"
@@ -305,41 +271,31 @@ export default function DashboardPage() {
               accent="red"
             />
             <StatCard
-              label="High Risk"
+              label="High risk, open"
               value={stats?.high_risk_count ?? '-'}
               change={stats?.high_risk_change}
-              sub="open alerts ≥65"
+              sub="scored 65 or above"
               loading={statsLoading}
               accent="red"
             />
             <StatCard
-              label="False Positive Rate"
+              label="False positive rate"
               value={stats ? `${stats.false_positive_rate}%` : '-'}
-              sub={stats ? `${stats.labels_collected} labels collected · last retrain ${stats.next_retrain_in}` : 'from labeled alerts'}
+              sub={stats ? `from ${stats.labels_collected} analyst labels` : 'from labeled alerts'}
               loading={statsLoading}
-              accent="green"
             />
           </div>
 
-          {/* Labels counter */}
+          {/* Active learning note */}
           {stats && stats.labels_collected > 0 && (
-            <div style={{
-              background: C.card, border: `1px solid ${C.border}`, borderRadius: 4,
-              padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 10,
-            }}>
-              <span style={{ fontSize: 11, color: C.textMuted }}>
-                <span style={{ color: C.textPrimary, fontWeight: 700 }}>{stats.labels_collected}</span>
-                {' '}analyst labels collected - last retrain{' '}
-                <span style={{ color: C.textPrimary, fontWeight: 700 }}>{stats.next_retrain_in}</span>
-              </span>
-              <span style={{ fontSize: 10, padding: '2px 7px', border: `1px solid ${C.border}`, borderRadius: 2, color: C.textMuted, marginLeft: 'auto' }}>
-                ACTIVE LEARNING
-              </span>
-            </div>
+            <p style={{ margin: '-8px 0 0', fontSize: 13, color: C.textMuted }}>
+              {stats.labels_collected} analyst decisions recorded for retraining. Last retrain: {stats.next_retrain_in.toLowerCase()}.{' '}
+              <Link href="/dashboard/intelligence" className="link-ember">Model intelligence</Link>
+            </p>
           )}
 
           {/* Feed + Recent alerts */}
-          <div className="feed-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16 }}>
+          <div className="feed-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, alignItems: 'start' }}>
             <LiveFeed onAlertClick={setSelectedAlertId} />
 
             <div
@@ -348,18 +304,16 @@ export default function DashboardPage() {
                 display: 'flex', flexDirection: 'column',
               }}
             >
-              <div style={{ padding: '12px 14px', borderBottom: `1px solid ${C.border}` }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Recent Alerts
-                </span>
+              <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: 16, color: C.textPrimary }}>Open alerts</span>
+                <Link href="/dashboard/alerts" className="link-ember" style={{ fontSize: 13 }}>Go to queue</Link>
               </div>
               <div style={{ flex: 1, overflowY: 'auto' }}>
                 {alertsLoading
                   ? [...Array(5)].map((_, i) => (
-                      <div key={i} style={{ height: 52, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#30363D' }} />
-                        <div style={{ flex: 1, height: 10, background: '#30363D', borderRadius: 2 }} />
-                        <div style={{ width: 40, height: 10, background: '#30363D', borderRadius: 2 }} />
+                      <div key={i} style={{ height: 56, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 10 }}>
+                        <div className="skeleton" style={{ flex: 1, height: 12 }} />
+                        <div className="skeleton" style={{ width: 28, height: 12 }} />
                       </div>
                     ))
                   : alerts.slice(0, 10).map((alert) => {
@@ -377,24 +331,22 @@ export default function DashboardPage() {
                           onClick={() => setSelectedAlertId(alert.id)}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedAlertId(alert.id) } }}
                           aria-label={`Alert: ${alert.user_name}, ${alert.fraud_type.replace(/_/g, ' ')}, score ${Math.round(alert.risk_score)}`}
+                          className="row-hover"
                           style={{
-                            padding: '10px 14px', borderBottom: `1px solid ${C.border}`,
-                            cursor: 'pointer', transition: 'background 0.1s',
-                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '11px 16px', borderBottom: `1px solid ${C.border}`,
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 12,
                           }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#1C2128' }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                         >
-                          <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0 }} />
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: 12, color: C.textPrimary, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <p style={{ margin: 0, fontSize: 14, color: C.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {alert.user_name}
                             </p>
-                            <p style={{ margin: 0, fontSize: 10, color: C.textMuted }}>
-                              {alert.fraud_type.replace(/_/g, ' ')}
+                            <p style={{ margin: '2px 0 0', fontSize: 13, color: C.textMuted }}>
+                              {formatFraudType(alert.fraud_type)}
                             </p>
                           </div>
-                          <span style={{ fontSize: 13, fontWeight: 800, color, flexShrink: 0 }}>
+                          <span style={{ fontSize: 16, color, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
                             {Math.round(alert.risk_score)}
                           </span>
                         </div>
@@ -406,12 +358,7 @@ export default function DashboardPage() {
 
           {/* Users table */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h2 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textPrimary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                Monitored Employees
-              </h2>
-              <span style={{ fontSize: 11, color: C.textMuted }}>{users.length} active</span>
-            </div>
+            <SectionTitle aside={`${users.length} people`}>Monitored employees</SectionTitle>
             <UserTable users={users} loading={usersLoading} />
           </div>
         </main>

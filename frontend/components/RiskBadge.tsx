@@ -1,20 +1,12 @@
 'use client'
 
-import { C } from '@/lib/tokens'
+import { C, FONT } from '@/lib/tokens'
 
-const COLORS = {
-  critical: C.critical,
-  high: C.critical,
-  medium: C.medium,
-  low: C.low,
-  border: C.border,
-}
-
-const LABELS: Record<string, string> = {
-  critical: 'CRITICAL',
-  high: 'HIGH RISK',
-  medium: 'MEDIUM',
-  low: 'LOW',
+const STYLE = {
+  critical: { color: C.critical, wash: C.criticalWash, label: 'Critical' },
+  high: { color: C.critical, wash: C.criticalWash, label: 'High' },
+  medium: { color: C.medium, wash: C.mediumWash, label: 'Medium' },
+  low: { color: C.low, wash: C.lowWash, label: 'Low' },
 }
 
 interface Props {
@@ -24,40 +16,26 @@ interface Props {
 }
 
 export default function RiskBadge({ level, score, size = 'md' }: Props) {
-  const color = COLORS[level]
-  const padding = size === 'sm' ? '2px 6px' : '3px 8px'
-  const fontSize = size === 'sm' ? '10px' : '11px'
-
+  const s = STYLE[level]
   return (
     <span
       style={{
         display: 'inline-flex',
-        alignItems: 'center',
-        gap: 5,
-        border: `1px solid ${color}`,
-        color,
-        padding,
-        fontSize,
-        fontWeight: 700,
-        letterSpacing: '0.08em',
-        borderRadius: 2,
+        alignItems: 'baseline',
+        gap: 6,
+        background: s.wash,
+        color: s.color,
+        padding: size === 'sm' ? '2px 7px' : '3px 9px',
+        fontSize: size === 'sm' ? 12 : 13,
+        fontWeight: 400,
+        borderRadius: 4,
         whiteSpace: 'nowrap',
-        fontFamily: 'inherit',
+        lineHeight: 1.4,
       }}
     >
-      <span
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          background: color,
-          display: 'inline-block',
-          flexShrink: 0,
-        }}
-      />
-      {LABELS[level]}
+      {s.label}
       {score !== undefined && (
-        <span style={{ opacity: 0.8, marginLeft: 2 }}>{Math.round(score)}</span>
+        <span style={{ fontFamily: FONT.mono, fontSize: size === 'sm' ? 11 : 12 }}>{Math.round(score)}</span>
       )}
     </span>
   )

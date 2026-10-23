@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { api, type FeedEvent } from '@/lib/api'
-import { C } from '@/lib/tokens'
+import { api, normaliseIso, type FeedEvent } from '@/lib/api'
+import { C, FONT } from '@/lib/tokens'
 
 const RISK_COLORS: Record<string, string> = {
   critical: C.critical,
@@ -13,58 +13,45 @@ const RISK_COLORS: Record<string, string> = {
 
 function FeedRow({ event, isNew, onAlertClick }: { event: FeedEvent; isNew: boolean; onAlertClick?: (id: string) => void }) {
   const color = event.risk_level ? RISK_COLORS[event.risk_level] || C.textMuted : C.textMuted
-  const [hovered, setHovered] = useState(false)
   const pulse = event.is_anomalous && (event.risk_level === 'critical' || event.risk_level === 'high')
   const clickable = !!event.alert_id && !!onAlertClick
+  const time = event.timestamp ? new Date(normaliseIso(event.timestamp)).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''
 
   return (
     <div
-      className={isNew ? 'animate-slide-in' : ''}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className={`${isNew ? 'animate-slide-in ' : ''}${clickable ? 'row-hover' : ''}`}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
       onClick={() => clickable && onAlertClick!(event.alert_id!)}
+      onKeyDown={(e) => { if (clickable && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onAlertClick!(event.alert_id!) } }}
       style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 10,
-        padding: '10px 12px',
+        display: 'grid',
+        gridTemplateColumns: '64px 10px 1fr auto',
+        alignItems: 'baseline',
+        gap: 12,
+        padding: '10px 16px',
         borderBottom: `1px solid ${C.border}`,
-        background: hovered ? C.hover : 'transparent',
-        transition: 'background 0.15s',
+        background: event.alert_id ? C.bg : 'transparent',
         cursor: clickable ? 'pointer' : 'default',
       }}
     >
-      <div
+      <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>{time}</span>
+      <span
         className={pulse ? 'animate-pulse-dot' : ''}
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: '50%',
-          background: event.is_anomalous ? color : C.border,
-          marginTop: 4,
-          flexShrink: 0,
-        }}
+        style={{ width: 7, height: 7, borderRadius: '50%', background: event.is_anomalous ? color : C.borderStrong, alignSelf: 'center' }}
       />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-          <span style={{ fontSize: 12, color: C.textPrimary, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {event.description}
-          </span>
-          {event.alert_id && (
-            <span style={{ fontSize: 9, fontWeight: 700, color, border: `1px solid ${color}`, borderRadius: 2, padding: '1px 4px', letterSpacing: '0.04em', flexShrink: 0 }}>
-              ALERT ↗
-            </span>
-          )}
-        </div>
-        <div style={{ marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 10, color: C.textMuted }}>{event.user_id}</span>
-          {event.is_anomalous && event.risk_score !== undefined && (
-            <span style={{ fontSize: 10, fontWeight: 700, color }}>
-              RISK {Math.round(event.risk_score)}
-            </span>
-          )}
-        </div>
+      <div style={{ minWidth: 0 }}>
+        <p style={{ margin: 0, fontSize: 14, color: event.is_anomalous ? C.textPrimary : C.textBody, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {event.description}
+        </p>
+        <p style={{ margin: '2px 0 0', fontFamily: FONT.mono, fontSize: 12, color: C.textFaint }}>{event.user_id}</p>
       </div>
+      {event.is_anomalous && event.risk_score !== undefined ? (
+        <span style={{ fontSize: 13, color, whiteSpace: 'nowrap' }}>
+          {event.alert_id ? 'Alert ' : 'Risk '}
+          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{Math.round(event.risk_score)}</span>
+        </span>
+      ) : <span />}
     </div>
   )
 }
@@ -103,7 +90,8 @@ export default function LiveFeed({ onAlertClick }: { onAlertClick?: (alertId: st
   }, [])
 
   return (
-    <div
+    <section
+      aria-label="Live event feed"
       style={{
         background: C.card,
         border: `1px solid ${C.border}`,
@@ -111,36 +99,27 @@ export default function LiveFeed({ onAlertClick }: { onAlertClick?: (alertId: st
         overflow: 'hidden',
       }}
     >
-      <div
-        style={{
-          padding: '12px 14px',
-          borderBottom: `1px solid ${C.border}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span className="animate-pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: C.low, display: 'inline-block' }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Live Intelligence Feed
-          </span>
-        </div>
+      <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <span style={{ fontSize: 16, color: C.textPrimary }}>Live events</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: C.textMuted }}>
+          <span className="animate-pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: C.low }} />
+          every event scored as it arrives
+        </span>
       </div>
 
       {events.length === 0 ? (
-        <div style={{ padding: 20, textAlign: 'center' }}>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} style={{ height: 48, background: C.hover, borderRadius: 2, marginBottom: 4 }} />
+        <div style={{ padding: 16, display: 'grid', gap: 8 }} aria-busy="true">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="skeleton" style={{ height: 40 }} />
           ))}
         </div>
       ) : (
-        <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+        <div style={{ maxHeight: 440, overflowY: 'auto' }}>
           {events.map((ev) => (
             <FeedRow key={ev.id} event={ev} isNew={newIds.has(ev.id)} onAlertClick={onAlertClick} />
           ))}
         </div>
       )}
-    </div>
+    </section>
   )
 }

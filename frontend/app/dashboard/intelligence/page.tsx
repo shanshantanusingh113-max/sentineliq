@@ -4,25 +4,24 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import Sidebar from '@/components/Sidebar'
 import { api, type Intelligence, type ModelInfo, type Stats, type WebhookConfig, timeAgo } from '@/lib/api'
-import { C } from '@/lib/tokens'
+import PageHeader, { SectionTitle } from '@/components/PageHeader'
+import { C, FONT } from '@/lib/tokens'
 
 const IntelligenceCharts = dynamic(() => import('@/components/IntelligenceCharts'), {
   ssr: false,
   loading: () => (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-      {[...Array(4)].map((_, i) => (
-        <div key={i} style={{ height: 300, background: C.card, border: `1px solid ${C.border}`, borderRadius: 4 }} />
-      ))}
+    <div style={{ display: 'grid', gap: 16 }} aria-busy="true">
+      {[...Array(2)].map((_, i) => <div key={i} className="skeleton" style={{ height: 260 }} />)}
     </div>
   ),
 })
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: '18px 20px' }}>
-      <p style={{ margin: '0 0 8px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>{label}</p>
-      <p style={{ margin: 0, fontSize: 28, color: C.textPrimary, fontWeight: 800 }}>{value}</p>
-      {sub && <p style={{ margin: '5px 0 0', fontSize: 11, color: C.textMuted }}>{sub}</p>}
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: '18px 20px 16px' }}>
+      <p style={{ margin: '0 0 10px', fontSize: 13, color: C.textMuted }}>{label}</p>
+      <p style={{ margin: 0, fontSize: 36, color: C.textPrimary, fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</p>
+      {sub && <p style={{ margin: '8px 0 0', fontSize: 12, color: C.textMuted }}>{sub}</p>}
     </div>
   )
 }
@@ -37,26 +36,24 @@ function ModelCard({
   metric: { label: string; value: string }
 }) {
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: '20px 20px 18px' }}>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: '22px 22px 18px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.textPrimary }}>{name}</p>
-        <span style={{ fontSize: 10, fontWeight: 700, color: C.critical, border: `1px solid ${C.critical}`, borderRadius: 2, padding: '2px 7px', letterSpacing: '0.05em' }}>
-          WEIGHT {weight}
-        </span>
+        <h3 style={{ margin: 0, fontSize: 22, fontWeight: 400, letterSpacing: '-0.005em', color: C.textPrimary }}>{name}</h3>
+        <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.textMuted, paddingTop: 6 }}>weight {weight}</span>
       </div>
-      <p style={{ margin: '0 0 14px', fontSize: 12, color: C.textMuted, lineHeight: 1.65 }}>{description}</p>
+      <p className="serif" style={{ margin: '0 0 18px', fontSize: 16, color: C.textBody, lineHeight: 1.5 }}>{description}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
         {params.map(({ label, value }) => (
           <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, color: C.textMuted }}>{label}</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: C.textPrimary, fontFamily: 'monospace' }}>{value}</span>
+            <span style={{ fontFamily: FONT.mono, fontSize: 12, color: C.textMuted }}>{label}</span>
+            <span style={{ fontSize: 12, color: C.textPrimary, fontFamily: FONT.mono }}>{value}</span>
           </div>
         ))}
       </div>
-      <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
+      <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12, marginTop: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 10, color: C.textMuted }}>{metric.label}</span>
-          <span style={{ fontSize: 11, fontWeight: 800, color: C.critical }}>{metric.value}</span>
+          <span style={{ fontSize: 13, color: C.textMuted }}>{metric.label}</span>
+          <span style={{ fontSize: 16, color: C.textPrimary, fontVariantNumeric: 'tabular-nums' }}>{metric.value}</span>
         </div>
       </div>
     </div>
@@ -190,43 +187,28 @@ export default function IntelligencePage() {
     <div style={{ display: 'flex', height: '100vh', background: C.bg, overflow: 'hidden' }}>
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-        <div style={{ height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: `1px solid ${C.border}`, background: C.card, flexShrink: 0 }}>
-          <h1 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textPrimary }}>Model Intelligence</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span style={{ fontSize: 11, color: C.textMuted }}>Live alert data · last 7 days</span>
-            <button
-              onClick={runTraining}
-              disabled={training}
-              style={{
-                padding: '6px 14px', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                background: training ? 'transparent' : C.critical,
-                border: `1px solid ${training ? C.border : C.critical}`,
-                color: training ? C.textMuted : '#F0F6FC',
-                borderRadius: 3, cursor: training ? 'default' : 'pointer',
-                opacity: training ? 0.7 : 1,
-              }}
-            >
-              {training ? 'RUNNING...' : 'RUN TRAINING PIPELINE'}
-            </button>
-          </div>
-        </div>
+        <PageHeader title="Model intelligence" description="How the three models are performing on live alert data from the last 7 days">
+          <button className="btn btn-ink btn-sm" onClick={runTraining} disabled={training}>
+            {training ? 'Retraining...' : 'Retrain with analyst labels'}
+          </button>
+        </PageHeader>
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <main className="page-pad" style={{ flex: 1, overflowY: 'auto', padding: '24px 28px 48px', display: 'flex', flexDirection: 'column', gap: 36 }}>
           {loading && !data && (
-            <div style={{ height: 120, background: C.card, border: `1px solid ${C.border}`, borderRadius: 4 }} />
+            <div className="stat-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }} aria-busy="true">
+              {[0, 1, 2].map(i => <div key={i} className="skeleton" style={{ height: 260 }} />)}
+            </div>
           )}
 
           {data && (
             <>
               {/* Model Pipeline cards */}
               <div>
-                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Model Pipeline
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                <SectionTitle aside="weighted into one 0 to 100 score">The scoring pipeline</SectionTitle>
+                <div className="stat-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                   <ModelCard
                     name="Isolation Forest"
-                    weight="40%"
+                    weight="0.4"
                     description="Trained on synthetic events at startup. Contamination parameter set to 0.1 - the model expects ~10% of events to be anomalous. Scores each incoming event by how isolated it is from the normal cluster. No labels required - fully unsupervised."
                     params={[
                       { label: 'contamination', value: modelInfo ? String(modelInfo.isolation_forest.contamination) : '0.1' },
@@ -237,7 +219,7 @@ export default function IntelligencePage() {
                   />
                   <ModelCard
                     name="LSTM Autoencoder"
-                    weight="40%"
+                    weight="0.4"
                     description="Trained on sequences of consecutive events per user. Learns to reconstruct normal behavioural sequences. When reconstruction error exceeds threshold, the event is flagged. Detects slow behavioural drift that point anomaly models miss."
                     params={[
                       { label: 'seq_len', value: modelInfo ? String(modelInfo.lstm.seq_len) : '-' },
@@ -248,7 +230,7 @@ export default function IntelligencePage() {
                   />
                   <ModelCard
                     name="XGBoost Classifier"
-                    weight="20%"
+                    weight="0.2"
                     description="Trained on labeled synthetic data with 5 fraud pattern classes. Retrains when investigators label alerts as True Positive or False Positive - active learning loop. Each retrain incorporates analyst feedback to improve precision."
                     params={[
                       { label: 'n_estimators', value: modelInfo ? String(modelInfo.xgboost.n_estimators) : '150' },
@@ -262,42 +244,35 @@ export default function IntelligencePage() {
 
               {/* Ensemble Performance stats */}
               <div>
-                <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Ensemble Performance
-                </p>
-                <p style={{ margin: '0 0 14px', fontSize: 11, color: C.textMuted }}>
-                  Precision and recall computed from analyst-labeled alerts (TP/FP) · {data.training_events || 0} total events processed
-                </p>
-                <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-                  <Stat label="Precision" value={data.precision != null ? `${(data.precision * 100).toFixed(1)}%` : '-'} sub={data.precision == null ? 'need ≥10 labels' : undefined} />
-                  <Stat label="Recall" value={data.recall != null ? `${(data.recall * 100).toFixed(1)}%` : '-'} sub={data.recall == null ? 'need ≥10 labels' : undefined} />
-                  <Stat label="F1 Score" value={data.f1 != null ? `${(data.f1 * 100).toFixed(1)}%` : '-'} sub={data.f1 == null ? 'need ≥10 labels' : undefined} />
-                  <Stat label="Mean Detect Time" value={detectDisplay} sub="event scored to alert created" />
+                <SectionTitle aside={`measured against analyst labels / ${data.training_events || 0} events processed`}>Ensemble accuracy</SectionTitle>
+                <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+                  <Stat label="Precision" value={data.precision != null ? `${(data.precision * 100).toFixed(1)}%` : '-'} sub={data.precision == null ? 'needs 10 or more labels' : 'of flagged alerts were real'} />
+                  <Stat label="Recall" value={data.recall != null ? `${(data.recall * 100).toFixed(1)}%` : '-'} sub={data.recall == null ? 'needs 10 or more labels' : 'of real threats were caught'} />
+                  <Stat label="F1 score" value={data.f1 != null ? `${(data.f1 * 100).toFixed(1)}%` : '-'} sub={data.f1 == null ? 'needs 10 or more labels' : 'balance of the two'} />
+                  <Stat label="Time to detect" value={detectDisplay} sub="from event to alert, on average" />
                 </div>
               </div>
 
               {/* Training log - own full-width section, below ensemble performance */}
               {logLines.length > 0 && (
                 <div>
-                  <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    Training Log
-                  </p>
+                  <SectionTitle>Training log</SectionTitle>
                   <div
                     ref={logRef}
                     style={{
-                      background: '#0D1117', border: '1px solid #30363D', borderRadius: 4,
-                      padding: 16, fontFamily: 'monospace', fontSize: 12,
-                      color: '#16A34A', lineHeight: 1.9,
+                      background: C.card, border: `1px solid ${C.border}`, borderRadius: 4,
+                      padding: '14px 16px', fontFamily: FONT.mono, fontSize: 12,
+                      color: C.textBody, lineHeight: 1.75,
                       minHeight: 200, maxHeight: 400, overflowY: 'auto',
                     }}
                   >
                     {logLines.map((line, i) => (
-                      <div key={i} style={{ color: line.includes('Skipping') || line.includes('insufficient') ? '#D97706' : '#16A34A' }}>
-                        {line}
+                      <div key={i} style={{ color: line.includes('Skipping') || line.includes('insufficient') ? C.medium : C.textBody }}>
+                        <span style={{ color: C.textFaint }}>$ </span>{line}
                       </div>
                     ))}
                     {training && (
-                      <div style={{ display: 'inline-block', width: 8, height: 14, background: '#16A34A', verticalAlign: 'middle', marginLeft: 2 }} />
+                      <div style={{ display: 'inline-block', width: 8, height: 14, background: C.ink, verticalAlign: 'middle', marginLeft: 2 }} />
                     )}
                   </div>
                 </div>
@@ -307,53 +282,46 @@ export default function IntelligencePage() {
 
               {/* Webhook Notifications */}
               <div>
-                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Webhook Notifications
-                </p>
+                <SectionTitle>Integrations</SectionTitle>
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: '20px 20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
                     <div>
-                      <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: C.textPrimary }}>Outbound alert notifications</p>
-                      <p style={{ margin: 0, fontSize: 12, color: C.textMuted }}>Fires a POST request when any alert scores ≥ 80. Works with Slack, Teams, Discord, or any HTTP endpoint.</p>
+                      <p style={{ margin: '0 0 4px', fontSize: 16, color: C.textPrimary }}>Alert notifications</p>
+                      <p style={{ margin: 0, fontSize: 13, color: C.textMuted }}>Sends a POST request whenever an alert scores 80 or above. Works with Slack, Teams, Discord, or any HTTP endpoint.</p>
                     </div>
                     <span style={{
-                      fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-                      padding: '3px 8px', borderRadius: 2,
-                      border: `1px solid ${webhook?.configured ? C.low : C.border}`,
+                      fontSize: 12, padding: '2px 8px', borderRadius: 4, flexShrink: 0,
+                      background: webhook?.configured ? C.lowWash : C.hover,
                       color: webhook?.configured ? C.low : C.textMuted,
                     }}>
-                      {webhook?.configured ? 'ACTIVE' : 'NOT CONFIGURED'}
+                      {webhook?.configured ? 'Active' : 'Not set up'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input
+                      aria-label="Webhook URL"
                       type="url"
                       placeholder="https://hooks.slack.com/services/..."
                       value={webhookInput}
                       onChange={(e) => setWebhookInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && saveWebhook()}
                       style={{
-                        flex: 1, padding: '8px 12px', fontSize: 12, fontFamily: 'monospace',
-                        background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3,
-                        color: C.textPrimary, outline: 'none',
+                        flex: 1, padding: '9px 12px', fontSize: 12, fontFamily: FONT.mono,
+                        background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4,
+                        color: C.textPrimary, minWidth: 0,
                       }}
                     />
                     <button
                       onClick={saveWebhook}
                       disabled={webhookSaving}
-                      style={{
-                        padding: '8px 16px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
-                        background: webhookSaved ? C.low : C.textPrimary,
-                        color: C.bg, border: 'none', borderRadius: 3, cursor: 'pointer',
-                        flexShrink: 0,
-                      }}
+                      className="btn btn-ink btn-sm"
                     >
-                      {webhookSaved ? 'SAVED' : webhookSaving ? 'SAVING...' : 'SAVE'}
+                      {webhookSaved ? 'Saved' : webhookSaving ? 'Saving...' : 'Save webhook'}
                     </button>
                   </div>
                   {webhook?.configured && (
-                    <p style={{ margin: '10px 0 0', fontSize: 11, color: C.textMuted }}>
-                      Payload: <code style={{ fontFamily: 'monospace', color: C.textPrimary }}>{'{ alert_id, user_name, risk_score, fraud_type, risk_level, timestamp }'}</code>
+                    <p style={{ margin: '10px 0 0', fontSize: 12, color: C.textMuted }}>
+                      Payload: <code style={{ fontFamily: FONT.mono, color: C.textPrimary }}>{'{ alert_id, user_name, risk_score, fraud_type, risk_level, timestamp }'}</code>
                     </p>
                   )}
                 </div>
@@ -361,39 +329,37 @@ export default function IntelligencePage() {
 
               {/* API Connector */}
               <div>
-                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  External System Connector
-                </p>
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: '20px 20px' }}>
-                  <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: C.textPrimary }}>Real-time event ingestion</p>
-                  <p style={{ margin: '0 0 16px', fontSize: 12, color: C.textMuted }}>
+                  <p style={{ margin: '0 0 4px', fontSize: 16, color: C.textPrimary }}>Event ingestion</p>
+                  <p style={{ margin: '0 0 16px', fontSize: 13, color: C.textMuted }}>
                     POST raw events from Finacle, Temenos, or any core banking system directly into the ML pipeline. Each event is scored and can trigger an alert.
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="stat-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div>
-                      <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Endpoint</p>
-                      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3, padding: '8px 12px', fontFamily: 'monospace', fontSize: 11, color: C.textPrimary, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <p style={{ margin: '0 0 6px', fontSize: 13, color: C.textMuted }}>Endpoint</p>
+                      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, padding: '8px 12px', fontFamily: FONT.mono, fontSize: 12, color: C.textPrimary, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>POST {apiBase}/api/ingest</span>
                         <button
                           onClick={() => navigator.clipboard.writeText(`${apiBase}/api/ingest`)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textMuted, fontSize: 10, padding: 0 }}
+                          className="link-ember"
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}
                         >
-                          COPY
+                          Copy
                         </button>
                       </div>
                     </div>
                     <div>
-                      <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Response</p>
-                      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3, padding: '8px 12px', fontFamily: 'monospace', fontSize: 11, color: C.textMuted }}>
+                      <p style={{ margin: '0 0 6px', fontSize: 13, color: C.textMuted }}>Response</p>
+                      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, padding: '8px 12px', fontFamily: FONT.mono, fontSize: 12, color: C.textMuted }}>
                         {'{ event_id, risk_score, risk_level, alert_id?, alert_triggered }'}
                       </div>
                     </div>
                   </div>
                   <div style={{ marginTop: 12 }}>
-                    <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Required fields</p>
+                    <p style={{ margin: '0 0 6px', fontSize: 13, color: C.textMuted }}>Required fields</p>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {['user_id', 'event_type', 'department', 'location', 'hour', 'tx_count', 'download_mb'].map(f => (
-                        <span key={f} style={{ fontSize: 10, fontFamily: 'monospace', color: C.textPrimary, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 2, padding: '2px 7px' }}>{f}</span>
+                        <span key={f} style={{ fontSize: 12, fontFamily: FONT.mono, color: C.textPrimary, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, padding: '2px 7px' }}>{f}</span>
                       ))}
                     </div>
                   </div>
@@ -404,7 +370,7 @@ export default function IntelligencePage() {
 
           {!loading && !data && (
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: 24, color: C.textMuted }}>
-              Intelligence metrics unavailable while the backend starts.
+              Model metrics will appear once the scoring service has finished starting.
             </div>
           )}
         </main>

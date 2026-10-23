@@ -34,23 +34,26 @@ ML models score every event as it arrives. Alerts appear live on the dashboard.
 - No paid APIs, no Kafka, no Redis, no Docker required locally
 
 ## Design Rules - Never Break These
-- Background: #0D1117
-- Card background: #161B22
-- Border: #30363D
-- Text primary: #F0F6FC
-- Text muted: #8B949E
-- Critical/High risk: #DC2626
-- Medium risk: #D97706
-- Low risk: #16A34A
-- Amber: #D97706
-- Hover: #1C2128
-- Use inline style constants from `lib/tokens.ts` as `C` for ALL brand colors
-- NEVER use Tailwind color classes for brand colors (unreliable)
-- NO rounded-full except avatars
-- NO purple, NO gradients, NO Inter font
-- Sharp corners on all cards and buttons
-- Border on all cards: 1px solid #30363D
-- Font: Geist or system font stack
+Warm parchment system: cream canvas, warm ink text, hairline borders, 4px corners.
+All values live in `frontend/lib/tokens.ts` (`C`, `FONT`, `SHADOW`) - never raw hex in JSX.
+
+- Canvas (parchment): #F7F7F4 - `C.bg`
+- Card (bone): #F2F1ED - `C.card`
+- Hover / secondary fill (linen): #E6E5E0 - `C.hover`
+- Hairline border: #DEDDD8 - `C.border`; stronger divider (stone) #CDCDC9 - `C.borderStrong`
+- Text: ink #26251E `C.textPrimary`, body #45443C `C.textBody`, muted #7A7974 `C.textMuted`, faint #A1A19F `C.textFaint`
+- Risk scale: crimson #CF2D56 (critical/high), amber #C08532 (medium), forest #34785C (low),
+  each with a paper wash for tags/banners (`C.criticalWash`, `C.mediumWash`, `C.lowWash`)
+- Ember #F54E00 (`C.ember`) is for inline links and short emphasis only - never a fill
+- Primary action = ink fill (`.btn .btn-ink`), secondary = linen (`.btn-linen`), tertiary = `.btn-ghost`
+- Never pure white or pure black; no gradients, glows, or coloured shadows
+- 4px radius on cards, buttons, inputs; 8px on modals and popovers; rounded-full only for avatars and dots
+- Type: Geist (UI, weight 400 headings with tighter tracking as size grows - never bold),
+  EB Garamond (`.serif`, for alert narratives, case explanations and editorial prose),
+  Geist Mono (`FONT.mono`, for IDs, timestamps, feature names, model params). No Inter.
+- Sentence case everywhere - no all-caps labels, no tracked-out eyebrows
+- Single-series charts are ink; risk colours only where the value is a risk level
+- Shared pieces: `PageHeader` / `SectionTitle` / `LiveStatus` (components/PageHeader.tsx), `Logo.tsx`
 
 ## ML Models
 1. Isolation Forest (scikit-learn) - point anomaly detection, contamination=0.1, n_estimators=100

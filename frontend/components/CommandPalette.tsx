@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Alert, User } from '@/lib/api'
-import { C, riskColor, riskLevel } from '@/lib/tokens'
+import { C, FONT, SHADOW, riskColor, riskLevel } from '@/lib/tokens'
 
 interface Props {
   open: boolean
@@ -92,7 +92,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
     <div
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
+        position: 'fixed', inset: 0, background: 'rgba(38,37,30,0.28)',
         zIndex: 200, display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
         paddingTop: 96,
       }}
@@ -100,9 +100,9 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          width: 560, background: C.card, border: `1px solid ${C.border}`,
-          borderRadius: 6, overflow: 'hidden',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
+          width: 560, maxWidth: 'calc(100vw - 32px)', background: C.bg,
+          borderRadius: 8, overflow: 'hidden',
+          boxShadow: SHADOW.popover,
         }}
       >
         {/* Input */}
@@ -115,13 +115,13 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
             value={q}
             onChange={e => setQ(e.target.value)}
             onKeyDown={onKey}
-            placeholder="Search alerts, users, navigation…"
+            placeholder="Search alerts, people, or pages"
             style={{
               flex: 1, background: 'none', border: 'none', outline: 'none',
               color: C.textPrimary, fontSize: 14, fontFamily: 'inherit',
             }}
           />
-          <kbd style={{ fontSize: 10, color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 3, padding: '2px 6px', flexShrink: 0 }}>ESC</kbd>
+          <kbd style={{ fontSize: 12, color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 4, padding: '2px 6px', flexShrink: 0, fontFamily: FONT.mono }}>esc</kbd>
         </div>
 
         {/* Results */}
@@ -129,7 +129,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
           {/* Navigation */}
           {visActions.length > 0 && (
             <>
-              <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: '0.08em' }}>NAVIGATION</div>
+              <div style={{ padding: '8px 16px 4px', fontSize: 12, color: C.textMuted }}>Go to</div>
               {visActions.map((it, i) => (
                 <div
                   key={it.id}
@@ -142,7 +142,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
                   }}
                 >
                   <span style={{ fontSize: 13, color: C.textPrimary }}>{it.label}</span>
-                  <kbd style={{ fontSize: 10, color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 3, padding: '2px 6px' }}>{it.hint}</kbd>
+                  <kbd style={{ fontSize: 12, color: C.textFaint, fontFamily: FONT.mono }}>{it.hint}</kbd>
                 </div>
               ))}
             </>
@@ -151,7 +151,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
           {/* Alerts */}
           {alertItems.length > 0 && (
             <div style={visActions.length > 0 ? sectionBorder : {}}>
-              <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: '0.08em' }}>OPEN ALERTS</div>
+              <div style={{ padding: '8px 16px 4px', fontSize: 12, color: C.textMuted }}>Open alerts</div>
               {alertItems.map((it, i) => {
                 const color = it.level === 'critical' || it.level === 'high' ? C.critical : it.level === 'medium' ? C.medium : C.low
                 return (
@@ -169,7 +169,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
                       <span style={{ fontSize: 13, color: C.textPrimary }}>{it.label}</span>
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color }}>{it.hint}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color }}>{it.hint}</span>
                   </div>
                 )
               })}
@@ -179,7 +179,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
           {/* Users */}
           {userItems.length > 0 && (
             <div style={(visActions.length > 0 || alertItems.length > 0) ? sectionBorder : {}}>
-              <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: '0.08em' }}>USERS</div>
+              <div style={{ padding: '8px 16px 4px', fontSize: 12, color: C.textMuted }}>People</div>
               {userItems.map((it, i) => {
                 const color = riskColor(it.score)
                 return (
@@ -195,18 +195,18 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{
-                        width: 22, height: 22, borderRadius: '50%', background: color,
+                        width: 24, height: 24, borderRadius: '50%', background: C.hover, boxShadow: `inset 0 0 0 1.5px ${color}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0,
+                        fontSize: 11, color: C.textPrimary, flexShrink: 0,
                       }}>
                         {it.label.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </div>
                       <div>
                         <div style={{ fontSize: 13, color: C.textPrimary }}>{it.label}</div>
-                        <div style={{ fontSize: 10, color: C.textMuted }}>{it.sub}</div>
+                        <div style={{ fontSize: 12, color: C.textMuted }}>{it.sub}</div>
                       </div>
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color }}>{Math.round(it.score)}</span>
+                    <span style={{ fontSize: 14, color, fontVariantNumeric: 'tabular-nums' }}>{Math.round(it.score)}</span>
                   </div>
                 )
               })}
@@ -224,7 +224,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
         <div style={{
           display: 'flex', gap: 16, padding: '8px 16px',
           borderTop: `1px solid ${C.border}`,
-          fontSize: 10, color: C.textMuted,
+          fontSize: 12, color: C.textMuted,
         }}>
           <span>↑↓ navigate</span>
           <span>↵ select</span>

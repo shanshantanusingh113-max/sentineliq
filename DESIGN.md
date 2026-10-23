@@ -106,6 +106,8 @@ components:
     padding: "3px 8px"
 ---
 
+> **Superseded.** The interface now uses the warm parchment system described under "Design Rules" in CLAUDE.md, with every value in `frontend/lib/tokens.ts`. This file documents the previous dark theme and is kept for reference only.
+
 # Design System: SentinelIQ
 
 ## 1. Overview
