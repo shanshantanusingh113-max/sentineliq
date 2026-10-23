@@ -39,7 +39,7 @@ Tokens live in `frontend/lib/tokens.ts` (C, IRIDESCENT, R, LABEL) and mirror CSS
 - Background (Void): #0A0A09 - Paper (cards): #121211 - Stone (panels/hover): #181816 / #1D1D1B
 - Ash hairlines: #2A2A27 - Text (Bone): #E5E4E0 - Muted (Smoke): #8A8984 - Faint: #55544F
 - Risk colors are the ONLY hues in product UI: Critical/High #DC2626, Medium #D97706, Low #16A34A
-- Iridescent gradient (255deg yellow -> pink -> blue -> white) appears ONCE: the landing hero sphere.
+- Iridescent gradient (255deg yellow -> pink -> blue -> white) appears ONCE: the landing hero payment card.
   Never as a button, border, accent or background anywhere else
 - Use `C` from `lib/tokens.ts` for ALL colors - never raw hex in JSX; no Tailwind color classes
 - Radius: cards/panels/images 0px; interactive elements (buttons, links, inputs, nav items) 10px;
@@ -51,7 +51,10 @@ Tokens live in `frontend/lib/tokens.ts` (C, IRIDESCENT, R, LABEL) and mirror CSS
 - Labels: 11px uppercase, letter-spacing 0.05em (museum signage). Use `.label` or `LABEL`
 - Primary interactive styles: `.ghost-link` (text + arrow) and `.ghost-pill` (1px Bone outline,
   inverts to Bone fill on hover). No filled color buttons except destructive risk actions
-- Landing sections: `(NN)` index label + hairline, 76-119px vertical rhythm, concentric ring ornaments
+- Landing hero: iridescent bank card (chip, masked PAN, cardholder) with a scoring sweep, a FLAGGED
+  transaction stamp (risk 94), headline ink layer clipped to the card, and a live transaction tape
+  marquee (flagged rows in risk red). No circles, spheres or ring ornaments
+- Landing sections: `(NN)` index label + hairline, 76-119px vertical rhythm
 
 ## ML Models
 1. Isolation Forest (scikit-learn) - point anomaly detection, contamination=0.1, n_estimators=100

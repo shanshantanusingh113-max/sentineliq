@@ -101,22 +101,6 @@ const ENVIRONMENTS = [
 
 /* ------------------------------------------------------------------ */
 
-function Rings({ size, style }: { size: number; style?: React.CSSProperties }) {
-  return (
-    <svg
-      aria-hidden="true"
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      style={{ position: 'absolute', pointerEvents: 'none', overflow: 'visible', ...style }}
-    >
-      {[50, 38, 26].map(r => (
-        <circle key={r} cx="50" cy="50" r={r} fill="none" stroke={C.border} strokeWidth="0.12" vectorEffect="non-scaling-stroke" />
-      ))}
-    </svg>
-  )
-}
-
 function Label({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return <p style={{ ...LABEL, margin: 0, ...style }}>{children}</p>
 }
@@ -233,13 +217,124 @@ function CapabilityVisual({ kind }: { kind: 'baseline' | 'ensemble' | 'shap' | '
   )
 }
 
-const SPHERE = 'clamp(300px, 46vw, 640px)'
+// Hero card geometry - the ink layer is clipped to exactly this footprint
+const CARD_W = 'clamp(280px, 34vw, 500px)'
+const CARD_H = `calc(${CARD_W} / 1.586)`
+const CARD_X = '72%'
+const CARD_Y = '31%'
+const CARD_R = 22
+const CARD_CLIP = `inset(calc(${CARD_Y} - ${CARD_H} / 2) calc(100% - ${CARD_X} - ${CARD_W} / 2) calc(100% - ${CARD_Y} - ${CARD_H} / 2) calc(${CARD_X} - ${CARD_W} / 2) round ${CARD_R}px)`
+
+const TAPE = [
+  { id: 'TXN-8F21', kind: 'Wire', amt: '$48,200.00', who: 'J. Sterling', where: 'Lagos', at: '02:14', score: 94 },
+  { id: 'TXN-1C07', kind: 'POS', amt: '$62.40', who: 'A. Mehta', where: 'Mumbai', at: '09:41', score: 8 },
+  { id: 'TXN-4A9E', kind: 'Export', amt: '12,480 records', who: 'M. Lopez', where: 'Core DB', at: '23:52', score: 81 },
+  { id: 'TXN-77B3', kind: 'ACH', amt: '$1,250.00', who: 'R. Okafor', where: 'London', at: '10:03', score: 12 },
+  { id: 'TXN-2D5C', kind: 'Role grant', amt: 'treasury_admin', who: 'K. Hayes', where: 'IAM', at: '01:27', score: 88 },
+  { id: 'TXN-90F1', kind: 'Card', amt: '$318.99', who: 'L. Chen', where: 'Singapore', at: '14:16', score: 6 },
+  { id: 'TXN-6E44', kind: 'Velocity', amt: '41 tx / 5 min', who: 'A. Kapoor', where: 'Branch 12', at: '11:58', score: 72 },
+  { id: 'TXN-3B18', kind: 'Wire', amt: '$9,900.00', who: 'S. Novak', where: 'Zurich', at: '16:22', score: 19 },
+]
+
+function TransactionTape() {
+  const rows = [...TAPE, ...TAPE]
+  return (
+    <div aria-hidden="true" style={{ position: 'relative', flexShrink: 0, borderTop: `1px solid ${C.border}`, overflow: 'hidden', height: 46, display: 'flex', alignItems: 'center', background: C.bg, zIndex: 3 }}>
+      <div className="tape-track" style={{ display: 'flex', whiteSpace: 'nowrap' }}>
+        {rows.map((t, i) => {
+          const flagged = t.score >= 65
+          return (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 15, padding: '0 30px', borderRight: `1px solid ${C.border}`, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: flagged ? C.textPrimary : C.textMuted }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: flagged ? C.critical : C.textFaint, flexShrink: 0 }} />
+              <span>{t.id}</span>
+              <span style={{ color: C.textMuted }}>{t.at}</span>
+              <span>{t.kind}</span>
+              <span>{t.amt}</span>
+              <span style={{ color: C.textMuted }}>{t.who} - {t.where}</span>
+              <span style={{ color: flagged ? C.critical : C.textFaint }}>{flagged ? `Flagged ${t.score}` : `Clear ${String(t.score).padStart(2, '0')}`}</span>
+            </span>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function CardFace() {
+  const ink = C.onInk
+  const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)', color: ink }
+  return (
+    <div style={{ position: 'absolute', inset: 0, padding: 'clamp(18px, 2.2vw, 30px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: ink }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <span style={{ fontSize: 'clamp(11px, 1vw, 15px)', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Bank_Corp_01</span>
+        {/* contactless */}
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.4" strokeLinecap="round">
+          <path d="M8.5 7.5a6 6 0 010 9" /><path d="M12 5a9.5 9.5 0 010 14" /><path d="M15.5 2.5a13 13 0 010 19" />
+        </svg>
+      </div>
+      {/* chip */}
+      <svg width="clamp(40px, 4.4vw, 58px)" viewBox="0 0 58 44" style={{ width: 'clamp(40px, 4.4vw, 58px)', height: 'auto' }} fill="none" stroke={ink} strokeWidth="1.3">
+        <rect x="0.65" y="0.65" width="56.7" height="42.7" rx="7" />
+        <path d="M0.65 15h18M0.65 29h18M39.35 15h18M39.35 29h18M19 0.65v42.7M39 0.65v42.7M19 22h20" />
+      </svg>
+      <div>
+        <p style={{ ...mono, margin: '0 0 12px', fontSize: 'clamp(15px, 1.9vw, 28px)', letterSpacing: '0.12em' }}>4532 &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; 0947</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <span style={{ display: 'block', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.7 }}>Cardholder</span>
+            <span style={{ fontSize: 'clamp(11px, 1vw, 15px)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>J. Sterling - Treasury</span>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ display: 'block', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.7 }}>Valid thru</span>
+            <span style={{ ...mono, fontSize: 'clamp(11px, 1vw, 15px)' }}>09/29</span>
+          </div>
+        </div>
+      </div>
+      {/* scoring sweep */}
+      <div className="card-scan" />
+    </div>
+  )
+}
+
+function FlagStamp() {
+  return (
+    <motion.div
+      aria-hidden="true"
+      className="hero-stamp"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 1.1 }}
+      style={{
+        position: 'absolute', zIndex: 4,
+        left: `calc(${CARD_X} + ${CARD_W} / 2 - 170px)`,
+        top: `calc(${CARD_Y} - ${CARD_H} / 2 - 44px)`,
+        width: 240, background: C.bg, border: `1px solid ${C.border}`,
+        fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 15px', borderBottom: `1px solid ${C.border}` }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: C.critical }}>
+          <span className="animate-pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: C.critical }} />
+          Flagged
+        </span>
+        <span style={{ color: C.textMuted }}>TXN-8F21</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '12px 15px' }}>
+        <div style={{ color: C.textMuted, lineHeight: 1.6 }}>
+          <div style={{ color: C.textPrimary }}>Wire $48,200</div>
+          <div>02:14 - Lagos</div>
+        </div>
+        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 46, lineHeight: 0.8, color: C.critical, letterSpacing: '0.013em' }}>94</span>
+      </div>
+    </motion.div>
+  )
+}
 
 function HeroCopy({ wrap, ink = false }: { wrap: React.CSSProperties; ink?: boolean }) {
   const fg = ink ? C.onInk : C.textPrimary
   const sub = ink ? C.onInk : C.textMuted
   return (
-    <div style={{ ...wrap, width: '100%', position: 'relative', paddingTop: 140, paddingBottom: 46 }}>
+    <div className="hero-copy" style={{ ...wrap, width: '100%', position: 'relative', paddingTop: 112, paddingBottom: 46 }}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} style={{ display: 'flex', gap: 30, marginBottom: 46 }}>
         <Label style={{ color: sub }}>(00)</Label>
         <Label style={{ color: fg }}>AI-driven insider threat detection</Label>
@@ -269,7 +364,7 @@ function HeroCopy({ wrap, ink = false }: { wrap: React.CSSProperties; ink?: bool
   )
 }
 
-const HERO_SIZE = 'clamp(52px, 10.2vw, 148px)'
+const HERO_SIZE = 'clamp(52px, 9.4vw, 140px)'
 
 function HeadlineLines() {
   return (
@@ -327,41 +422,49 @@ export default function LandingPage() {
       </header>
 
       {/* ── Hero ── */}
-      <section style={{ position: 'relative', minHeight: '100svh', display: 'flex', alignItems: 'flex-end', overflow: 'hidden' }}>
-        {/* Sphere + rings, anchored right of center */}
-        <div aria-hidden="true" style={{ position: 'absolute', left: '62%', top: '44%', width: 0, height: 0 }}>
-          <Rings size={1480} style={{ left: -740, top: -740 }} />
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-            className="hero-sphere"
-            style={{ position: 'absolute', left: `calc(${SPHERE} / -2)`, top: `calc(${SPHERE} / -2)`, width: SPHERE, height: SPHERE, background: IRIDESCENT }}
-          />
-        </div>
-
-        {/* Bone layer */}
-        <HeroCopy wrap={wrap} />
-
-        {/* Ink layer - same copy, clipped to the sphere, so letters read as ink on the gradient */}
+      <section style={{ position: 'relative', minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', overflow: 'hidden' }}>
+        {/* Iridescent payment card - the single gradient moment */}
         <motion.div
           aria-hidden="true"
+          className="hero-card"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', pointerEvents: 'none',
-            clipPath: `circle(calc(${SPHERE} / 2) at 62% 44%)`,
+            position: 'absolute', overflow: 'hidden',
+            left: `calc(${CARD_X} - ${CARD_W} / 2)`, top: `calc(${CARD_Y} - ${CARD_H} / 2)`,
+            width: CARD_W, height: CARD_H, borderRadius: CARD_R, background: IRIDESCENT,
+          }}
+        >
+          <CardFace />
+        </motion.div>
+        <FlagStamp />
+
+        {/* Bone layer */}
+        <HeroCopy wrap={wrap} />
+
+        {/* Ink layer - same copy, clipped to the card, so letters read as ink on the gradient */}
+        <motion.div
+          aria-hidden="true"
+          className="hero-ink"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 46, pointerEvents: 'none',
+            clipPath: CARD_CLIP,
           }}
         >
           <HeroCopy wrap={wrap} ink />
         </motion.div>
 
+        <TransactionTape />
+
         {/* Scroll indicator */}
         <div
           aria-hidden="true"
           style={{
-            position: 'fixed', right: 30, bottom: 30, zIndex: 30,
+            position: 'fixed', right: 30, bottom: 76, zIndex: 30,
             ...LABEL, color: C.textPrimary,
             display: 'flex', alignItems: 'center', gap: 8,
             opacity: scrolled ? 0 : 1, transition: 'opacity 0.3s', pointerEvents: 'none',
@@ -533,7 +636,6 @@ export default function LandingPage() {
 
       {/* ── CTA ── */}
       <section style={{ position: 'relative', overflow: 'hidden', padding: '119px 0' }}>
-        <Rings size={1100} style={{ right: -360, top: '50%', marginTop: -550 }} />
         <motion.div
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={reveal}
           style={{ ...wrap, position: 'relative' }}
