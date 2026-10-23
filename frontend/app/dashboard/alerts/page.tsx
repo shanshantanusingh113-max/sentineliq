@@ -197,7 +197,7 @@ export default function AlertsPage() {
         <div style={{ background: C.bg, borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
 
           {/* Title row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px', height: 76, borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 24px', height: 76, borderBottom: `1px solid ${C.border}` }}>
             <h1 style={{ margin: 0, fontSize: 34, fontWeight: 400, lineHeight: 1, letterSpacing: '0.006em', color: C.textPrimary }}>
               Alert Queue
             </h1>
@@ -285,7 +285,7 @@ export default function AlertsPage() {
           </div>
 
           {/* Filters row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 20px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 24px', flexWrap: 'wrap' }}>
             <Select value={riskLevel} onChange={setRiskLevel} options={RISK_LEVELS.map(v => ({ value: v }))} label="Risk level" />
             <Select value={status} onChange={setStatus} options={STATUSES.map(v => ({ value: v }))} label="Status" />
             <Select value={timeRange} onChange={setTimeRange} options={TIME_RANGES} label="Time range" />
@@ -294,7 +294,7 @@ export default function AlertsPage() {
               <input
                 type="range" min={0} max={100} value={minScore}
                 onChange={(e) => setMinScore(Number(e.target.value))}
-                style={{ width: 120, accentColor: C.critical, cursor: 'pointer' }}
+                style={{ width: 120, accentColor: C.textPrimary, cursor: 'pointer' }}
               />
               <span style={{ fontSize: 11, fontWeight: 700, color: C.textPrimary, width: 24, flexShrink: 0 }}>{minScore}</span>
             </div>

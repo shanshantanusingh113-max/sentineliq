@@ -348,7 +348,7 @@ export default function DashboardPage() {
                 display: 'flex', flexDirection: 'column',
               }}
             >
-              <div style={{ padding: '12px 14px', borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ height: 46, padding: '0 19px', flexShrink: 0, display: 'flex', alignItems: 'center', borderBottom: `1px solid ${C.border}` }}>
                 <span style={{ fontSize: 12, fontWeight: 500, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Recent Alerts
                 </span>

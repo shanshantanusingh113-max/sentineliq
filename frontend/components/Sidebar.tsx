@@ -31,7 +31,7 @@ export default function Sidebar() {
       }}
     >
       {/* Logo */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${C.border}` }}>
+      <div style={{ height: 76, padding: '0 20px', display: 'flex', alignItems: 'center', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 28, height: 28, overflow: 'hidden', flexShrink: 0 }}>

@@ -113,7 +113,9 @@ export default function LiveFeed({ onAlertClick }: { onAlertClick?: (alertId: st
     >
       <div
         style={{
-          padding: '12px 14px',
+          height: 46,
+          padding: '0 19px',
+          flexShrink: 0,
           borderBottom: `1px solid ${C.border}`,
           display: 'flex',
           justifyContent: 'space-between',

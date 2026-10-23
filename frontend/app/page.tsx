@@ -220,7 +220,9 @@ function CapabilityVisual({ kind }: { kind: 'baseline' | 'ensemble' | 'shap' | '
 // Hero card geometry - the ink layer is clipped to exactly this footprint
 const CARD_W = 'clamp(280px, 34vw, 500px)'
 const CARD_H = `calc(${CARD_W} / 1.586)`
-const CARD_X = '72%'
+// right edge of the 1400px content column, inside the gutter
+const EDGE_R = `(max(0px, (100% - ${MAX}px) / 2) + ${GUTTER})`
+const CARD_X = `(100% - ${EDGE_R} - ${CARD_W} / 2)`
 const CARD_Y = '31%'
 const CARD_R = 22
 const CARD_CLIP = `inset(calc(${CARD_Y} - ${CARD_H} / 2) calc(100% - ${CARD_X} - ${CARD_W} / 2) calc(100% - ${CARD_Y} - ${CARD_H} / 2) calc(${CARD_X} - ${CARD_W} / 2) round ${CARD_R}px)`
@@ -306,7 +308,7 @@ function FlagStamp() {
       transition={{ duration: 0.6, delay: 1.1 }}
       style={{
         position: 'absolute', zIndex: 4,
-        left: `calc(${CARD_X} + ${CARD_W} / 2 - 170px)`,
+        left: `calc(${CARD_X} + ${CARD_W} / 2 - 240px)`,
         top: `calc(${CARD_Y} - ${CARD_H} / 2 - 44px)`,
         width: 240, background: C.bg, border: `1px solid ${C.border}`,
         fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
@@ -464,7 +466,7 @@ export default function LandingPage() {
         <div
           aria-hidden="true"
           style={{
-            position: 'fixed', right: 30, bottom: 76, zIndex: 30,
+            position: 'fixed', right: `calc(max(0px, (100vw - ${MAX}px) / 2) + ${GUTTER})`, bottom: 76, zIndex: 30,
             ...LABEL, color: C.textPrimary,
             display: 'flex', alignItems: 'center', gap: 8,
             opacity: scrolled ? 0 : 1, transition: 'opacity 0.3s', pointerEvents: 'none',
@@ -592,7 +594,7 @@ export default function LandingPage() {
             {WORKFLOW.map(step => (
               <motion.div key={step.n} variants={reveal} className="cell-hover" style={{ padding: 30, minHeight: 380, display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 76, lineHeight: 0.8, color: C.textFaint, letterSpacing: '0.013em' }}>{step.n}</span>
-                <div style={{ marginTop: 'auto' }}>
+                <div style={{ marginTop: 119 }}>
                   <p style={{ margin: '0 0 15px', fontSize: 34, lineHeight: 1, letterSpacing: '0.006em', textTransform: 'uppercase' }}>{step.title}</p>
                   <p style={{ margin: 0, fontSize: 15, lineHeight: 1.4, color: C.textMuted }}>{step.desc}</p>
                 </div>
@@ -612,7 +614,7 @@ export default function LandingPage() {
                 initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={reveal}
                 className="split-grid"
                 style={{
-                  display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 19,
+                  display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 19, alignItems: 'baseline',
                   padding: '30px 0 46px',
                   borderTop: `1px solid ${C.border}`,
                   borderBottom: i === ENVIRONMENTS.length - 1 ? `1px solid ${C.border}` : 'none',

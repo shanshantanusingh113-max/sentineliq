@@ -66,8 +66,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <>
       {backendStatus === 'offline' && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-          background: C.criticalWash, borderBottom: `1px solid ${C.critical}`,
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
+          background: C.criticalWash, borderTop: `1px solid ${C.critical}`,
           padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8,
           fontSize: 11, color: C.textPrimary, fontFamily: 'inherit',
         }}>
@@ -77,8 +77,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
       {backendStatus === 'initializing' && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-          background: C.amberWash, borderBottom: `1px solid ${C.amber}`,
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
+          background: C.amberWash, borderTop: `1px solid ${C.amber}`,
           padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8,
           fontSize: 11, color: C.textPrimary, fontFamily: 'inherit',
         }}>
