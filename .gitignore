@@ -27,11 +27,14 @@ ENV/
 # Backend database & trained models
 backend/sentineliq.db
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 backend/models/saved/*.joblib
 backend/models/saved/*.pt
 backend/models/saved/*.pkl
+backend/models/saved/manifest.json
 
 # Node / Next.js
 node_modules/
