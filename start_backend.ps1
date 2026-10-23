@@ -7,16 +7,18 @@ if (-not (Test-Path "venv")) {
 }
 
 .\venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip --quiet
 
-Write-Host "Installing backend packages (first run can take several minutes)..."
-pip install -r requirements.txt --quiet
-if ($LASTEXITCODE -ne 0) {
-    # The pinned versions (e.g. torch 2.1.2) have no wheels for newer Python
-    # releases. Fall back to current versions of the same packages.
-    Write-Host "Pinned versions unavailable for this Python. Installing current versions instead..."
-    pip install fastapi "uvicorn[standard]" "sqlalchemy[asyncio]" aiosqlite greenlet scikit-learn torch xgboost shap numpy pandas pydantic python-multipart httpx openai --quiet
+# requirements.txt pins versions for the Python 3.10 deployment image. Those
+# pins have no prebuilt wheels for Python 3.12+, so on newer Python install
+# current versions of the same packages instead.
+$minor = [int](python -c "import sys; print(sys.version_info.minor)")
+Write-Host "Installing backend packages for Python 3.$minor (first run takes several minutes)..."
+if ($minor -le 11) {
+    pip install -r requirements.txt
+} else {
+    pip install fastapi "uvicorn[standard]" "sqlalchemy[asyncio]" aiosqlite greenlet scikit-learn torch xgboost shap numpy pandas pydantic python-multipart httpx openai
 }
 
+Write-Host ""
 Write-Host "Starting backend on http://localhost:8000 (first start trains the models, about 30 seconds)"
-uvicorn main:app --host 127.0.0.1 --port 8000
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
