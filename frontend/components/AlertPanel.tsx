@@ -222,10 +222,10 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
       {toast && (
         <div style={{
           position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
-          background: C.hover, border: `1px solid ${C.border}`, borderRadius: 4,
-          padding: '10px 20px', fontSize: 12, color: C.low, fontWeight: 600,
+          background: C.hover, border: `1px solid ${C.border}`, borderRadius: 0,
+          padding: '10px 20px', fontSize: 12, color: C.low, fontWeight: 500,
           zIndex: 200, whiteSpace: 'nowrap', letterSpacing: '0.02em',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          boxShadow: 'none',
         }}>
           {toast}
         </div>
@@ -252,7 +252,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
               <div style={{
                 width: 38, height: 38, borderRadius: '50%', background: scoreColor,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0,
+                fontSize: 13, fontWeight: 700, color: C.textPrimary, flexShrink: 0,
               }}>
                 {alert.user_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </div>
@@ -260,19 +260,19 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                 <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.textPrimary }}>{alert.user_name}</p>
                 <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>{alert.user_id} · {timeAgo(alert.ingested_at ?? alert.timestamp)}</p>
               </div>
-              <div style={{ border: `1px solid ${C.border}`, borderRadius: 3, padding: '3px 10px', fontSize: 11, color: C.textMuted, flexShrink: 0 }}>
+              <div style={{ border: `1px solid ${C.border}`, borderRadius: 0, padding: '3px 10px', fontSize: 11, color: C.textMuted, flexShrink: 0 }}>
                 {formatFraudType(alert.fraud_type)}
               </div>
               <div style={{ flexShrink: 0 }}>
-                <span style={{ fontSize: 28, fontWeight: 800, color: scoreColor, letterSpacing: '-0.02em' }}>{Math.round(alert.risk_score)}</span>
+                <span style={{ fontSize: 28, fontWeight: 500, color: scoreColor, letterSpacing: '0.01em' }}>{Math.round(alert.risk_score)}</span>
                 <span style={{ fontSize: 11, color: C.textMuted }}>/100</span>
               </div>
               <RiskBadge level={alert.risk_level} score={alert.risk_score} />
             </>
           ) : (
             <div style={{ flex: 1 }}>
-              <div style={{ height: 14, width: 120, background: C.border, borderRadius: 2, marginBottom: 8 }} />
-              <div style={{ height: 10, width: 80, background: C.hover, borderRadius: 2 }} />
+              <div style={{ height: 14, width: 120, background: C.border, borderRadius: 0, marginBottom: 8 }} />
+              <div style={{ height: 10, width: 80, background: C.hover, borderRadius: 0 }} />
             </div>
           )}
           <button
@@ -281,7 +281,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
             style={{
               background: 'none', border: `1px solid ${C.border}`, color: C.textMuted,
               cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '4px 9px',
-              borderRadius: 3, marginLeft: 4, flexShrink: 0,
+              borderRadius: 0, marginLeft: 4, flexShrink: 0,
             }}
           >×</button>
         </div>
@@ -290,7 +290,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
         {loading && (
           <div style={{ padding: 28, display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[100, 180, 80, 140, 60, 160, 90].map((w, i) => (
-              <div key={i} style={{ height: 13, width: w, background: C.border, borderRadius: 2 }} />
+              <div key={i} style={{ height: 13, width: w, background: C.border, borderRadius: 0 }} />
             ))}
           </div>
         )}
@@ -308,7 +308,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
 
               {/* ML model score cards */}
               <div>
-                <p style={{ margin: '0 0 10px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                <p style={{ margin: '0 0 10px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
                   Model Scores
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
@@ -320,12 +320,12 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                     const pct = Math.round(alert.model_scores[key] * 100)
                     const color = pct >= 65 ? C.critical : pct >= 40 ? C.medium : C.low
                     return (
-                      <div key={key} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3, padding: '10px 12px' }}>
+                      <div key={key} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0, padding: '10px 12px' }}>
                         <p style={{ margin: '0 0 6px', fontSize: 10, color: C.textMuted }}>{label}</p>
-                        <p style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color, letterSpacing: '-0.02em' }}>
+                        <p style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 500, color, letterSpacing: '0.01em' }}>
                           {pct}<span style={{ fontSize: 10, fontWeight: 400, color: C.textMuted }}>%</span>
                         </p>
-                        <div style={{ height: 3, background: C.border, borderRadius: 2, overflow: 'hidden', marginBottom: 5 }}>
+                        <div style={{ height: 3, background: C.border, borderRadius: 0, overflow: 'hidden', marginBottom: 5 }}>
                           <div style={{ width: `${pct}%`, height: '100%', background: color }} />
                         </div>
                         <p style={{ margin: 0, fontSize: 9, color: C.textMuted }}>{desc} · {weight} weight</p>
@@ -337,7 +337,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
 
               {/* SHAP chart */}
               <div>
-                <p style={{ margin: '0 0 12px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                <p style={{ margin: '0 0 12px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
                   Feature Attribution (SHAP)
                 </p>
                 <SHAPChart values={alert.shap_values ?? []} />
@@ -346,7 +346,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
               {/* Peer comparison */}
               {peerData && peerData.metrics.length > 0 && (
                 <div>
-                  <p style={{ margin: '0 0 12px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                  <p style={{ margin: '0 0 12px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
                     Peer Comparison
                     <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 5 }}>({peerData.role.replace(/_/g, ' ')} peers)</span>
                   </p>
@@ -358,9 +358,9 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                         <div key={m.metric}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                             <span style={{ fontSize: 11, color: C.textMuted }}>{m.metric}</span>
-                            <span style={{ fontSize: 14, fontWeight: 800, color, letterSpacing: '-0.02em' }}>{m.multiplier.toFixed(1)}x peer avg</span>
+                            <span style={{ fontSize: 14, fontWeight: 500, color, letterSpacing: '0.01em' }}>{m.multiplier.toFixed(1)}x peer avg</span>
                           </div>
-                          <div style={{ height: 4, background: C.border, borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
+                          <div style={{ height: 4, background: C.border, borderRadius: 0, overflow: 'hidden', marginBottom: 4 }}>
                             <div style={{ width: `${barPct}%`, height: '100%', background: color, transition: 'width 0.4s ease' }} />
                           </div>
                           <p style={{ margin: 0, fontSize: 10, color: C.textMuted, lineHeight: 1.5 }}>
@@ -379,11 +379,11 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
               {action && (
                 <div style={{
                   background: C.hover, border: `1px solid ${action.color}33`,
-                  borderRadius: 3, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start',
+                  borderRadius: 0, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start',
                 }}>
                   <AlertTriangle size={14} color={action.color} strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
                   <div>
-                    <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, color: action.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, color: action.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       Recommended Action
                     </p>
                     <p style={{ margin: 0, fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>{action.text}</p>
@@ -395,7 +395,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
               <div>
                 <label
                   htmlFor="case-notes"
-                  style={{ display: 'block', margin: '0 0 8px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}
+                  style={{ display: 'block', margin: '0 0 8px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}
                 >
                   Case Notes
                 </label>
@@ -408,11 +408,11 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                   placeholder="Add investigator notes… (Cmd+Enter to save)"
                   style={{
                     width: '100%', minHeight: 80, padding: '10px 12px',
-                    background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3,
+                    background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0,
                     color: C.textPrimary, fontSize: 12, fontFamily: 'inherit', lineHeight: 1.6,
                     resize: 'vertical', outline: 'none', boxSizing: 'border-box',
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = '#4D5562' }}
+                  onFocus={(e) => { e.target.style.borderColor = C.focus }}
                 />
                 {noteSavedAt && (
                   <p style={{ margin: '4px 0 0', fontSize: 10, color: C.low }}>Saved {timeAgo(noteSavedAt.toISOString())}</p>
@@ -427,15 +427,15 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
               <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
                 {/* Analysis block - top of right column, always visible on open */}
-                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3 }}>
+                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0 }}>
                   <div style={{ padding: '9px 14px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 11, color: C.amber }}>✦</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       {alert.ai_narrative ? 'AI Analysis' : 'Alert Analysis'}
                     </span>
                   </div>
                   <div style={{ padding: '12px 14px', borderBottom: `1px solid ${C.border}` }}>
-                    <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       In Plain Terms
                     </p>
                     <p style={{ margin: 0, fontSize: 12, color: C.textPrimary, lineHeight: 1.75 }}>
@@ -443,7 +443,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                     </p>
                   </div>
                   <div style={{ padding: '10px 14px' }}>
-                    <p style={{ margin: '0 0 8px', fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    <p style={{ margin: '0 0 8px', fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       Top ML Signals
                     </p>
                     {(alert.shap_values ?? [])
@@ -453,8 +453,8 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                       .map((v, i) => (
                         <div key={v.feature} style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: i === 0 ? 0 : 4 }}>
                           <span style={{ fontSize: 9, color: C.critical, fontWeight: 700 }}>↑</span>
-                          <span style={{ fontSize: 10, color: C.textMuted, fontFamily: 'monospace' }}>{v.feature}</span>
-                          <span style={{ fontSize: 10, color: C.textPrimary, fontWeight: 600 }}>+{v.contribution.toFixed(3)}</span>
+                          <span style={{ fontSize: 10, color: C.textMuted, fontFamily: 'var(--font-mono)' }}>{v.feature}</span>
+                          <span style={{ fontSize: 10, color: C.textPrimary, fontWeight: 500 }}>+{v.contribution.toFixed(3)}</span>
                         </div>
                       ))}
                   </div>
@@ -462,7 +462,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
 
                 {/* Investigation Timeline */}
                 <div>
-                  <p style={{ margin: '0 0 14px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                  <p style={{ margin: '0 0 14px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
                     Investigation Timeline
                     {timeline.length > 0 && (
                       <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 4 }}>· {timeline.length} events</span>
@@ -494,7 +494,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
                                 <span style={{
-                                  fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 3,
+                                  fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 0,
                                   border: `1px solid ${kindColor}`, color: kindColor,
                                   flexShrink: 0, letterSpacing: '0.04em',
                                 }}>{kindLabel}</span>
@@ -517,7 +517,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
 
                 {/* Analyst Actions */}
                 <div>
-                  <p style={{ margin: '0 0 10px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                  <p style={{ margin: '0 0 10px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
                     Analyst Actions
                   </p>
                   {auditLog.length === 0 ? (
@@ -530,7 +530,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                             fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', flexShrink: 0, marginTop: 2,
                             color: entry.action_type === 'restrict' ? C.critical : entry.action_type === 'label' ? C.low : C.textMuted,
                             border: `1px solid ${entry.action_type === 'restrict' ? C.critical : entry.action_type === 'label' ? C.low : C.border}`,
-                            borderRadius: 2, padding: '1px 5px', textTransform: 'uppercase',
+                            borderRadius: 0, padding: '1px 5px', textTransform: 'uppercase',
                           }}>{entry.action_type}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ margin: 0, fontSize: 11, color: C.textPrimary, lineHeight: 1.4 }}>{entry.message}</p>
@@ -559,7 +559,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                       onClick={() => handleLabel(lbl)}
                       style={{
                         flex: 1, padding: '7px 0', fontSize: 11, fontWeight: 700,
-                        letterSpacing: '0.06em', cursor: 'pointer', borderRadius: 3,
+                        letterSpacing: '0.05em', cursor: 'pointer', borderRadius: 0,
                         border: `1px solid ${alert.label === lbl ? (lbl === 'TP' ? C.critical : C.low) : C.border}`,
                         background: alert.label === lbl ? (lbl === 'TP' ? 'rgba(220,38,38,0.12)' : 'rgba(22,163,74,0.12)') : 'transparent',
                         color: alert.label === lbl ? (lbl === 'TP' ? C.critical : C.low) : C.textMuted,
@@ -581,8 +581,8 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                         onClick={handleResolve}
                         style={{
                           flex: 1, padding: '9px 0', fontSize: 11, fontWeight: 700,
-                          letterSpacing: '0.06em', cursor: 'pointer', borderRadius: 3,
-                          background: C.critical, border: 'none', color: '#fff',
+                          letterSpacing: '0.05em', cursor: 'pointer', borderRadius: 0,
+                          background: C.critical, border: 'none', color: C.textPrimary,
                           opacity: acting ? 0.6 : 1,
                         }}
                       >MARK RESOLVED</button>
@@ -592,7 +592,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                         onClick={handleDismiss}
                         style={{
                           flex: 1, padding: '9px 0', fontSize: 11, fontWeight: 700,
-                          letterSpacing: '0.06em', cursor: 'pointer', borderRadius: 3,
+                          letterSpacing: '0.05em', cursor: 'pointer', borderRadius: 0,
                           background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted,
                           opacity: acting ? 0.6 : 1,
                         }}
@@ -601,7 +601,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                   ) : (
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '9px 0' }}>
                       <span style={{
-                        fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                        fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
                         color: alert.status === 'resolved' ? C.low : C.textMuted,
                       }}>
                         {alert.status === 'resolved' ? '✓ Resolved' : 'Dismissed'}
@@ -615,7 +615,7 @@ export default function AlertPanel({ alertId, onClose, onResolved }: Props) {
                     style={{
                       padding: '9px 14px', background: 'transparent',
                       border: `1px solid ${C.border}`, color: C.textMuted,
-                      borderRadius: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                      borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                       flexShrink: 0,
                     }}
                   >

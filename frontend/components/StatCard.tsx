@@ -21,13 +21,13 @@ export default function StatCard({ label, value, sub, change, loading, accent = 
         style={{
           background: C.card,
           border: `1px solid ${C.border}`,
-          borderRadius: 4,
-          padding: '20px 24px',
+          borderRadius: 0,
+          padding: '19px 19px 15px',
         }}
       >
-        <div style={{ width: 80, height: 12, background: '#30363D', borderRadius: 2, marginBottom: 12 }} />
-        <div style={{ width: 120, height: 28, background: '#30363D', borderRadius: 2, marginBottom: 8 }} />
-        <div style={{ width: 60, height: 10, background: '#30363D', borderRadius: 2 }} />
+        <div style={{ width: 80, height: 12, background: C.border, borderRadius: 0, marginBottom: 12 }} />
+        <div style={{ width: 120, height: 28, background: C.border, borderRadius: 0, marginBottom: 8 }} />
+        <div style={{ width: 60, height: 10, background: C.border, borderRadius: 0 }} />
       </div>
     )
   }
@@ -37,14 +37,14 @@ export default function StatCard({ label, value, sub, change, loading, accent = 
       style={{
         background: C.card,
         border: `1px solid ${C.border}`,
-        borderRadius: 4,
-        padding: '20px 24px',
+        borderRadius: 0,
+        padding: '19px 19px 15px',
       }}
     >
-      <p style={{ margin: 0, fontSize: 11, color: C.textMuted, letterSpacing: '0.08em', fontWeight: 600, textTransform: 'uppercase' }}>
+      <p style={{ margin: 0, fontSize: 11, color: C.textMuted, letterSpacing: '0.05em', fontWeight: 400, textTransform: 'uppercase' }}>
         {label}
       </p>
-      <p style={{ margin: '10px 0 4px', fontSize: 28, fontWeight: 700, color: accentColor, lineHeight: 1 }}>
+      <p style={{ margin: '30px 0 15px', fontSize: 46, fontWeight: 400, color: accentColor, lineHeight: 0.8, letterSpacing: '0.013em' }}>
         {value}
       </p>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -52,7 +52,7 @@ export default function StatCard({ label, value, sub, change, loading, accent = 
           <span
             style={{
               fontSize: 11,
-              fontWeight: 600,
+              fontWeight: 500,
               color: change > 0 ? C.critical : change < 0 ? C.low : C.textMuted,
             }}
           >

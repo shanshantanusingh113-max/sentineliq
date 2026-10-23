@@ -48,12 +48,12 @@ interface Props {
 export default function UserTable({ users, loading, onSelectUser, watchlist, onToggleWatchlist, restrictedUsers }: Props) {
   if (loading) {
     return (
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4 }}>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 0 }}>
         {[...Array(8)].map((_, i) => (
           <div key={i} style={{ height: 52, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#30363D' }} />
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.border }} />
             {[100, 80, 60, 50, 70].map((w, j) => (
-              <div key={j} style={{ height: 10, width: w, background: '#30363D', borderRadius: 2 }} />
+              <div key={j} style={{ height: 10, width: w, background: C.border, borderRadius: 0 }} />
             ))}
           </div>
         ))}
@@ -62,7 +62,7 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
   }
 
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, overflow: 'hidden' }}>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, overflow: 'hidden' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
         <thead>
           <tr style={{ borderBottom: `1px solid ${C.border}` }}>
@@ -70,7 +70,7 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
               <th style={{ width: 36, padding: '10px 14px' }} />
             )}
             {['User', 'Role', 'Department', 'Risk Score', 'Last Active', ''].map((h) => (
-              <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: C.textMuted, fontWeight: 600, fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: C.textMuted, fontWeight: 500, fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {h}
               </th>
             ))}
@@ -121,7 +121,7 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
                         width: 30, height: 30, borderRadius: '50%',
                         background: riskColor(user.risk_score),
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 11, fontWeight: 700, color: '#F0F6FC', flexShrink: 0,
+                        fontSize: 11, fontWeight: 700, color: C.textPrimary, flexShrink: 0,
                       }}
                     >
                       {user.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
@@ -133,7 +133,7 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
                     {isWatched && (
                       <span style={{
                         fontSize: 8, fontWeight: 700, color: C.amber,
-                        border: `1px solid ${C.amber}`, borderRadius: 2,
+                        border: `1px solid ${C.amber}`, borderRadius: 0,
                         padding: '1px 5px', letterSpacing: '0.05em', marginLeft: 4,
                       }}>
                         WATCH
@@ -142,7 +142,7 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
                     {isRestricted && (
                       <span style={{
                         fontSize: 8, fontWeight: 700, color: C.critical,
-                        border: `1px solid ${C.critical}`, borderRadius: 2,
+                        border: `1px solid ${C.critical}`, borderRadius: 0,
                         padding: '1px 5px', letterSpacing: '0.05em', marginLeft: 4,
                       }}>
                         RESTRICTED
@@ -158,7 +158,7 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
                 </td>
                 <td style={{ padding: '10px 14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: riskColor(user.risk_score) }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: riskColor(user.risk_score) }}>
                       {Math.round(user.risk_score)}
                     </span>
                     <TrendArrow trend={user.risk_trend} />
@@ -173,9 +173,9 @@ export default function UserTable({ users, loading, onSelectUser, watchlist, onT
                     <button
                       onClick={(e) => { e.stopPropagation(); onSelectUser(user.id) }}
                       style={{
-                        fontSize: 10, padding: '4px 8px', borderRadius: 3,
+                        fontSize: 10, padding: '4px 8px', borderRadius: 0,
                         background: 'transparent', border: `1px solid ${C.border}`,
-                        color: C.textMuted, cursor: 'pointer', fontWeight: 600, letterSpacing: '0.04em',
+                        color: C.textMuted, cursor: 'pointer', fontWeight: 500, letterSpacing: '0.04em',
                       }}
                     >
                       VIEW

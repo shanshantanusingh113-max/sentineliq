@@ -28,7 +28,7 @@ function Select({ value, onChange, options, label }: {
       aria-label={label}
       style={{
         background: C.card, border: `1px solid ${C.border}`, color: C.textPrimary,
-        padding: '5px 8px', fontSize: 11, borderRadius: 3, cursor: 'pointer',
+        padding: '5px 8px', fontSize: 11, borderRadius: 10, cursor: 'pointer',
         fontFamily: 'inherit', outline: 'none',
       }}
     >
@@ -54,7 +54,7 @@ function AlertRow({ alert, selected, onClick, isRight }: {
       style={{
         padding: '13px 18px', borderBottom: `1px solid ${C.border}`,
         cursor: 'pointer', transition: 'background 0.1s',
-        background: selected ? C.hover : hov ? '#16191f' : 'transparent',
+        background: selected ? C.hover : hov ? C.panel : 'transparent',
         borderLeft: isRight
           ? `${selected ? 3 : 1}px solid ${selected ? color : C.border}`
           : `3px solid ${selected ? color : 'transparent'}`,
@@ -65,7 +65,7 @@ function AlertRow({ alert, selected, onClick, isRight }: {
         <span style={{ flex: 1, fontSize: 12, fontWeight: selected ? 700 : 500, color: C.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {alert.user_name}
         </span>
-        <span style={{ fontSize: 13, fontWeight: 800, color, flexShrink: 0 }}>
+        <span style={{ fontSize: 13, fontWeight: 500, color, flexShrink: 0 }}>
           {Math.round(alert.risk_score)}
         </span>
       </div>
@@ -76,9 +76,9 @@ function AlertRow({ alert, selected, onClick, isRight }: {
       {alert.status !== 'open' && (
         <div style={{ marginTop: 4 }}>
           <span style={{
-            fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', padding: '1px 5px',
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', padding: '1px 5px',
             border: `1px solid ${alert.status === 'resolved' ? C.low : C.border}`,
-            color: alert.status === 'resolved' ? C.low : C.textMuted, borderRadius: 2,
+            color: alert.status === 'resolved' ? C.low : C.textMuted, borderRadius: 0,
           }}>
             {alert.status.toUpperCase()}
           </span>
@@ -194,13 +194,13 @@ export default function AlertsPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ background: C.card, borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+        <div style={{ background: C.bg, borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
 
           {/* Title row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 20px', borderBottom: `1px solid ${C.border}` }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px', height: 76, borderBottom: `1px solid ${C.border}` }}>
+            <h1 style={{ margin: 0, fontSize: 34, fontWeight: 400, lineHeight: 1, letterSpacing: '0.006em', color: C.textPrimary }}>
               Alert Queue
-            </span>
+            </h1>
             <span style={{ fontSize: 10, color: C.textMuted, paddingRight: 8, borderRight: `1px solid ${C.border}` }}>
               {total} total
             </span>
@@ -227,9 +227,9 @@ export default function AlertsPage() {
                   onClick={() => setSimOpen(o => !o)}
                   disabled={simBusy}
                   style={{
-                    padding: '5px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
+                    padding: '5px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
                     background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted,
-                    borderRadius: 3, cursor: 'pointer',
+                    borderRadius: 10, cursor: 'pointer',
                   }}
                 >
                   SIMULATE ▾
@@ -237,8 +237,8 @@ export default function AlertsPage() {
                 {simOpen && (
                   <div style={{
                     position: 'absolute', top: '100%', right: 0, marginTop: 3, zIndex: 20,
-                    background: C.card, border: `1px solid ${C.border}`, borderRadius: 4,
-                    minWidth: 220, boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                    background: C.card, border: `1px solid ${C.border}`, borderRadius: 0,
+                    minWidth: 220, boxShadow: 'none',
                   }}>
                     {[
                       { label: 'Bulk Data Exfiltration', scenario: 'bulk_exfiltration' },
@@ -268,7 +268,7 @@ export default function AlertsPage() {
                 style={{
                   padding: '5px 10px', fontSize: 10, fontWeight: 700,
                   background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted,
-                  borderRadius: 3, cursor: 'pointer', opacity: retraining ? 0.5 : 1,
+                  borderRadius: 10, cursor: 'pointer', opacity: retraining ? 0.5 : 1,
                 }}
               >
                 {retraining ? 'RETRAINING…' : 'RETRAIN'}
@@ -278,7 +278,7 @@ export default function AlertsPage() {
                 style={{
                   padding: '5px 10px', fontSize: 10, fontWeight: 700,
                   background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted,
-                  borderRadius: 3, cursor: 'pointer',
+                  borderRadius: 10, cursor: 'pointer',
                 }}
               >↺</button>
             </div>
@@ -301,10 +301,10 @@ export default function AlertsPage() {
 
             {fraudTypeFilter && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>
-                <span style={{ fontSize: 9, fontWeight: 700, color: C.critical, border: `1px solid ${C.critical}`, borderRadius: 2, padding: '2px 6px', letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: C.critical, border: `1px solid ${C.critical}`, borderRadius: 0, padding: '2px 6px', letterSpacing: '0.05em' }}>
                   PATTERN
                 </span>
-                <span style={{ fontSize: 10, color: C.textPrimary, fontWeight: 600 }}>
+                <span style={{ fontSize: 10, color: C.textPrimary, fontWeight: 500 }}>
                   {formatFraudType(fraudTypeFilter)}
                 </span>
                 <button onClick={() => setFraudTypeFilter(null)} style={{ fontSize: 10, color: C.textMuted, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
@@ -316,7 +316,7 @@ export default function AlertsPage() {
 
           {/* Toast / retrain message */}
           {(simToast || retrainMsg) && (
-            <div style={{ padding: '6px 20px', background: '#1A2233', borderTop: `1px solid ${C.border}`, fontSize: 11, color: simToast ? C.medium : C.low }}>
+            <div style={{ padding: '6px 20px', background: C.panel, borderTop: `1px solid ${C.border}`, fontSize: 11, color: simToast ? C.medium : C.low }}>
               {simToast || retrainMsg}
             </div>
           )}
@@ -333,8 +333,8 @@ export default function AlertsPage() {
                   display: 'flex', alignItems: 'center', padding: '0 18px', gap: 10,
                 }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.border }} />
-                  <div style={{ flex: 1, height: 10, background: C.border, borderRadius: 2 }} />
-                  <div style={{ width: 24, height: 10, background: C.border, borderRadius: 2 }} />
+                  <div style={{ flex: 1, height: 10, background: C.border, borderRadius: 0 }} />
+                  <div style={{ width: 24, height: 10, background: C.border, borderRadius: 0 }} />
                 </div>
               ))}
             </div>
@@ -377,7 +377,7 @@ export default function AlertsPage() {
             background: C.card,
           }}>
             <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
-              style={{ fontSize: 11, background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted, padding: '4px 10px', borderRadius: 3, cursor: 'pointer', opacity: page <= 1 ? 0.4 : 1 }}>
+              style={{ fontSize: 11, background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted, padding: '4px 10px', borderRadius: 10, cursor: 'pointer', opacity: page <= 1 ? 0.4 : 1 }}>
               ← Prev
             </button>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.textMuted }}>
@@ -396,14 +396,14 @@ export default function AlertsPage() {
                 }}
                 style={{
                   width: 36, textAlign: 'center', background: C.bg, border: `1px solid ${C.border}`,
-                  color: C.textPrimary, fontSize: 11, borderRadius: 3, padding: '3px 4px',
+                  color: C.textPrimary, fontSize: 11, borderRadius: 0, padding: '3px 4px',
                   fontFamily: 'inherit', outline: 'none',
                 }}
               />
               of {totalPages}
             </span>
             <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
-              style={{ fontSize: 11, background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted, padding: '4px 10px', borderRadius: 3, cursor: 'pointer', opacity: page >= totalPages ? 0.4 : 1 }}>
+              style={{ fontSize: 11, background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted, padding: '4px 10px', borderRadius: 10, cursor: 'pointer', opacity: page >= totalPages ? 0.4 : 1 }}>
               Next →
             </button>
           </div>

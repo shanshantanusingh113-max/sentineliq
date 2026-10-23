@@ -30,7 +30,7 @@ export default function SHAPChart({ values }: Props) {
     <div>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Feature attribution</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Feature attribution</span>
         <span style={{ fontSize: 10, color: C.textMuted }}>SHAP · XGBoost · TreeExplainer</span>
       </div>
 
@@ -48,7 +48,7 @@ export default function SHAPChart({ values }: Props) {
             <div key={sv.feature} style={{ display: 'grid', gridTemplateColumns: '130px 1fr 56px', alignItems: 'center', gap: 0 }}>
               {/* Feature name */}
               <span style={{
-                fontSize: 11, color: C.textMuted, fontFamily: 'monospace',
+                fontSize: 11, color: C.textMuted, fontFamily: 'var(--font-mono)',
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 paddingRight: 8,
               }}>
@@ -64,7 +64,7 @@ export default function SHAPChart({ values }: Props) {
                   <div style={{
                     position: 'absolute', left: '50%', top: 2, bottom: 2,
                     width: isZero ? 1 : `${barPct}%`,
-                    background: C.critical, borderRadius: '0 2px 2px 0',
+                    background: C.critical, borderRadius: 0,
                     transition: 'width 0.4s ease',
                     minWidth: isZero ? 1 : undefined,
                   }} />
@@ -72,7 +72,7 @@ export default function SHAPChart({ values }: Props) {
                   <div style={{
                     position: 'absolute', right: '50%', top: 2, bottom: 2,
                     width: isZero ? 1 : `${barPct}%`,
-                    background: C.low, borderRadius: '2px 0 0 2px',
+                    background: C.low, borderRadius: 0,
                     transition: 'width 0.4s ease',
                     minWidth: isZero ? 1 : undefined,
                   }} />
@@ -82,7 +82,7 @@ export default function SHAPChart({ values }: Props) {
               {/* SHAP value */}
               <span style={{
                 fontSize: 11, fontWeight: 700, color,
-                textAlign: 'right', fontFamily: 'monospace', letterSpacing: '-0.01em',
+                textAlign: 'right', fontFamily: 'var(--font-mono)', letterSpacing: '0.01em',
                 paddingLeft: 8,
               }}>
                 {contrib >= 0 ? '+' : ''}{contrib.toFixed(3)}
@@ -106,14 +106,14 @@ export default function SHAPChart({ values }: Props) {
       {top && Math.abs(top.contribution ?? 0) > 1e-4 && (
         <div style={{
           marginTop: 10, padding: '8px 10px',
-          background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4,
+          background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0,
           fontSize: 11, color: C.textMuted, lineHeight: 1.6,
         }}>
-          Top driver <span style={{ color: C.textPrimary, fontFamily: 'monospace', fontWeight: 600 }}>{LABELS[top.feature] || top.feature}</span>
+          Top driver <span style={{ color: C.textPrimary, fontFamily: 'var(--font-mono)', fontWeight: 500 }}>{LABELS[top.feature] || top.feature}</span>
           {' '}recorded a value of{' '}
-          <span style={{ color: C.textPrimary, fontWeight: 600 }}>{(top.value ?? 0).toFixed(2)}</span>
+          <span style={{ color: C.textPrimary, fontWeight: 500 }}>{(top.value ?? 0).toFixed(2)}</span>
           {' '}- contributing{' '}
-          <span style={{ color: top.contribution >= 0 ? C.critical : C.low, fontWeight: 600 }}>
+          <span style={{ color: top.contribution >= 0 ? C.critical : C.low, fontWeight: 500 }}>
             {top.contribution >= 0 ? '+' : ''}{(top.contribution ?? 0).toFixed(3)}
           </span>
           {' '}to the final risk score.
