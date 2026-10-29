@@ -123,21 +123,21 @@ export default function DashboardPage() {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         {/* Topbar */}
-        <div style={{ height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: `1px solid ${C.border}`, background: C.card, flexShrink: 0 }}>
-          <h1 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textPrimary }}>Fraud Intelligence Overview</h1>
+        <div style={{ height: 76, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: `1px solid ${C.border}`, background: C.bg, flexShrink: 0 }}>
+          <h1 style={{ margin: 0, fontSize: 34, fontWeight: 400, lineHeight: 1, letterSpacing: '0.006em', color: C.textPrimary }}>Fraud Intelligence Overview</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             {simToast && (
-              <span style={{ fontSize: 11, color: C.medium, fontWeight: 600 }}>{simToast}</span>
+              <span style={{ fontSize: 11, color: C.medium, fontWeight: 500 }}>{simToast}</span>
             )}
             <div ref={simRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setSimOpen((o) => !o)}
-                style={{ padding: '5px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted, borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ padding: '5px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted, borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Simulate ▾
               </button>
               {simOpen && (
-                <div style={{ position: 'absolute', right: 0, top: '110%', background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, zIndex: 50, minWidth: 210, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+                <div style={{ position: 'absolute', right: 0, top: '110%', background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, zIndex: 50, minWidth: 210, boxShadow: 'none' }}>
                   {_SIMULATE_SCENARIOS.map(({ label, scenario }, idx, arr) => (
                     <button
                       key={scenario}
@@ -167,13 +167,13 @@ export default function DashboardPage() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {lastUpdated && (
-                <span style={{ fontSize: 10, color: C.textMuted, fontFamily: 'monospace' }}>
+                <span style={{ fontSize: 10, color: C.textMuted, fontFamily: 'var(--font-mono)' }}>
                   {lastUpdated.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </span>
               )}
               <span style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-                padding: '3px 8px', borderRadius: 2,
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+                padding: '3px 8px', borderRadius: 0,
                 border: `1px solid ${backendStatus === 'ok' ? C.low : backendStatus === 'initializing' ? C.amber : C.critical}`,
                 color: backendStatus === 'ok' ? C.low : backendStatus === 'initializing' ? C.amber : C.critical,
               }}>
@@ -197,21 +197,21 @@ export default function DashboardPage() {
               <div
                 role="alert"
                 style={{
-                  background: '#1A2233', padding: '10px 24px',
+                  background: C.panel, padding: '10px 24px',
                   display: 'flex', alignItems: 'center', gap: 10,
                   borderBottom: `1px solid ${C.border}`,
                   borderLeft: `3px solid ${newAlertNotif.risk_level === 'critical' || newAlertNotif.risk_level === 'high' ? C.critical : newAlertNotif.risk_level === 'medium' ? C.medium : C.low}`,
                 }}
               >
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: newAlertNotif.risk_level === 'critical' || newAlertNotif.risk_level === 'high' ? C.critical : newAlertNotif.risk_level === 'medium' ? C.medium : C.low, flexShrink: 0, display: 'inline-block' }} />
-                <p style={{ margin: 0, fontSize: 12, color: C.textPrimary, fontWeight: 600, flex: 1 }}>
+                <p style={{ margin: 0, fontSize: 12, color: C.textPrimary, fontWeight: 500, flex: 1 }}>
                   New alert - <span style={{ fontWeight: 700 }}>{newAlertNotif.user_name}</span>
                   {' · '}{newAlertNotif.fraud_type.replace(/_/g, ' ')}
-                  {' · '}score <span style={{ fontWeight: 800, color: newAlertNotif.risk_level === 'critical' || newAlertNotif.risk_level === 'high' ? C.critical : newAlertNotif.risk_level === 'medium' ? C.medium : C.low }}>{Math.round(newAlertNotif.risk_score)}</span>
+                  {' · '}score <span style={{ fontWeight: 500, color: newAlertNotif.risk_level === 'critical' || newAlertNotif.risk_level === 'high' ? C.critical : newAlertNotif.risk_level === 'medium' ? C.medium : C.low }}>{Math.round(newAlertNotif.risk_score)}</span>
                 </p>
                 <button
                   onClick={() => { setSelectedAlertId(newAlertNotif.id); setNewAlertNotif(null) }}
-                  style={{ fontSize: 11, color: C.textMuted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 3, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ fontSize: 11, color: C.textMuted, background: 'none', border: `1px solid ${C.border}`, borderRadius: 10, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   View
                 </button>
@@ -254,19 +254,19 @@ export default function DashboardPage() {
               <div
                 role="alert"
                 style={{
-                  background: C.critical, padding: '10px 24px',
+                  background: C.criticalWash, padding: '0 24px', height: 46,
                   display: 'flex', alignItems: 'center', gap: 10,
-                  borderBottom: '1px solid rgba(255,255,255,0.1)',
+                  borderBottom: `1px solid ${C.border}`, borderLeft: `2px solid ${C.critical}`,
                 }}
               >
-                <AlertTriangle size={15} color="#F0F6FC" strokeWidth={2} style={{ flexShrink: 0 }} />
-                <p style={{ margin: 0, fontSize: 13, color: '#F0F6FC', fontWeight: 600, flex: 1 }}>
+                <AlertTriangle size={15} color={C.critical} strokeWidth={2} style={{ flexShrink: 0 }} />
+                <p style={{ margin: 0, fontSize: 13, color: C.textPrimary, fontWeight: 400, flex: 1 }}>
                   Coordinated Activity Detected:{' '}
-                  <span style={{ fontWeight: 700 }}>{formatFraudType(cp.pattern)}</span>
-                  {' '}across <span style={{ fontWeight: 700 }}>{cp.users} users</span> in the {cp.window}.{' '}
+                  <span style={{ color: C.critical }}>{formatFraudType(cp.pattern)}</span>
+                  {' '}across <span>{cp.users} users</span> in the {cp.window}.{' '}
                   <Link
                     href={`/dashboard/alerts?fraud_type=${cp.pattern}`}
-                    style={{ color: '#F0F6FC', textDecoration: 'underline', fontSize: 13 }}
+                    style={{ color: C.textPrimary, textDecoration: 'underline', fontSize: 13 }}
                   >
                     View pattern →
                   </Link>
@@ -278,7 +278,7 @@ export default function DashboardPage() {
                     return next
                   })}
                   aria-label="Dismiss alert"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F0F6FC', padding: 4, display: 'flex', flexShrink: 0 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textPrimary, padding: 4, display: 'flex', flexShrink: 0 }}
                 >
                   <X size={15} strokeWidth={2} />
                 </button>
@@ -289,7 +289,7 @@ export default function DashboardPage() {
 
         <main style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Stat cards */}
-          <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 19 }}>
             <StatCard
               label="Users Monitored"
               value={stats?.users_monitored ?? '-'}
@@ -324,7 +324,7 @@ export default function DashboardPage() {
           {/* Labels counter */}
           {stats && stats.labels_collected > 0 && (
             <div style={{
-              background: C.card, border: `1px solid ${C.border}`, borderRadius: 4,
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 0,
               padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 10,
             }}>
               <span style={{ fontSize: 11, color: C.textMuted }}>
@@ -332,34 +332,34 @@ export default function DashboardPage() {
                 {' '}analyst labels collected - last retrain{' '}
                 <span style={{ color: C.textPrimary, fontWeight: 700 }}>{stats.next_retrain_in}</span>
               </span>
-              <span style={{ fontSize: 10, padding: '2px 7px', border: `1px solid ${C.border}`, borderRadius: 2, color: C.textMuted, marginLeft: 'auto' }}>
+              <span style={{ fontSize: 10, padding: '2px 7px', border: `1px solid ${C.border}`, borderRadius: 0, color: C.textMuted, marginLeft: 'auto' }}>
                 ACTIVE LEARNING
               </span>
             </div>
           )}
 
           {/* Feed + Recent alerts */}
-          <div className="feed-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16 }}>
+          <div className="feed-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 19 }}>
             <LiveFeed onAlertClick={setSelectedAlertId} />
 
             <div
               style={{
-                background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, overflow: 'hidden',
+                background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, overflow: 'hidden',
                 display: 'flex', flexDirection: 'column',
               }}
             >
-              <div style={{ padding: '12px 14px', borderBottom: `1px solid ${C.border}` }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <div style={{ height: 46, padding: '0 19px', flexShrink: 0, display: 'flex', alignItems: 'center', borderBottom: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 11, fontWeight: 400, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Recent Alerts
                 </span>
               </div>
-              <div style={{ flex: 1, overflowY: 'auto' }}>
+              <div className="rise-list" style={{ flex: 1, overflowY: 'auto' }}>
                 {alertsLoading
                   ? [...Array(5)].map((_, i) => (
                       <div key={i} style={{ height: 52, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#30363D' }} />
-                        <div style={{ flex: 1, height: 10, background: '#30363D', borderRadius: 2 }} />
-                        <div style={{ width: 40, height: 10, background: '#30363D', borderRadius: 2 }} />
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.border }} />
+                        <div style={{ flex: 1, height: 10, background: C.border, borderRadius: 0 }} />
+                        <div style={{ width: 40, height: 10, background: C.border, borderRadius: 0 }} />
                       </div>
                     ))
                   : alerts.slice(0, 10).map((alert) => {
@@ -382,7 +382,7 @@ export default function DashboardPage() {
                             cursor: 'pointer', transition: 'background 0.1s',
                             display: 'flex', alignItems: 'center', gap: 10,
                           }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#1C2128' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.hover }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                         >
                           <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0 }} />
@@ -394,7 +394,7 @@ export default function DashboardPage() {
                               {alert.fraud_type.replace(/_/g, ' ')}
                             </p>
                           </div>
-                          <span style={{ fontSize: 13, fontWeight: 800, color, flexShrink: 0 }}>
+                          <span style={{ fontSize: 13, fontWeight: 500, color, flexShrink: 0 }}>
                             {Math.round(alert.risk_score)}
                           </span>
                         </div>
@@ -407,7 +407,7 @@ export default function DashboardPage() {
           {/* Users table */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h2 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textPrimary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <h2 style={{ margin: 0, fontSize: 11, fontWeight: 400, color: C.textPrimary, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 Monitored Employees
               </h2>
               <span style={{ fontSize: 11, color: C.textMuted }}>{users.length} active</span>

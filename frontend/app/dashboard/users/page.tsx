@@ -58,16 +58,16 @@ function ActivityHeatmap({ userId }: { userId: string }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-        <p style={{ margin: 0, fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+        <p style={{ margin: 0, fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
           24h Activity Pattern
         </p>
         <span style={{ fontSize: 10, color: C.textMuted }}>{loaded ? `${totalEvents} events` : '…'}</span>
       </div>
-      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, padding: '10px 12px' }}>
+      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0, padding: '10px 12px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(24, 1fr)', gap: 3, marginBottom: 6 }}>
           {hourCounts.map((count, h) => {
             const intensity = count / maxCount
-            const bg = count === 0 ? '#1C2128'
+            const bg = count === 0 ? C.hover
               : intensity > 0.65 ? C.critical
               : intensity > 0.3 ? C.medium
               : C.low
@@ -78,7 +78,7 @@ function ActivityHeatmap({ userId }: { userId: string }) {
                 title={`${String(h).padStart(2, '0')}:00 - ${count} event${count !== 1 ? 's' : ''}`}
                 style={{
                   height: 20, background: bg, opacity,
-                  borderRadius: 2, cursor: 'default',
+                  borderRadius: 0, cursor: 'default',
                   transition: 'opacity 0.15s',
                 }}
               />
@@ -94,9 +94,9 @@ function ActivityHeatmap({ userId }: { userId: string }) {
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'center' }}>
           <span style={{ fontSize: 9, color: C.textMuted }}>Activity:</span>
-          {[['None', '#1C2128', 0.5], ['Low', C.low, 0.7], ['Medium', C.medium, 0.8], ['High', C.critical, 1]] .map(([label, color, op]) => (
+          {[['None', C.hover, 0.5], ['Low', C.low, 0.7], ['Medium', C.medium, 0.8], ['High', C.critical, 1]] .map(([label, color, op]) => (
             <span key={label as string} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ width: 10, height: 10, background: color as string, opacity: op as number, borderRadius: 2, display: 'inline-block' }} />
+              <span style={{ width: 10, height: 10, background: color as string, opacity: op as number, borderRadius: 0, display: 'inline-block' }} />
               <span style={{ fontSize: 9, color: C.textMuted }}>{label}</span>
             </span>
           ))}
@@ -143,7 +143,7 @@ function UserProfilePanel({
     await api.restrictUser(userId).catch(() => null)
     setRestricted(true)
     const msg = `Access restricted for ${detail.name}. All active sessions terminated. Security team notified.`
-    setBanner({ text: msg, color: '#DC2626' })
+    setBanner({ text: msg, color: C.critical })
     onRestrict(userId, detail.name)
   }
 
@@ -152,7 +152,7 @@ function UserProfilePanel({
     await api.escalateUser(userId).catch(() => null)
     setEscalated(true)
     const ref = `ESC-${Math.floor(1000 + Math.random() * 9000)}`
-    setBanner({ text: `Case escalated to Senior Investigator. Reference: ${ref}`, color: '#D97706' })
+    setBanner({ text: `Case escalated to Senior Investigator. Reference: ${ref}`, color: C.medium })
     onEscalate(userId, detail.name)
   }
 
@@ -166,7 +166,7 @@ function UserProfilePanel({
       }}
     >
       <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>User Profile</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: '0.05em', textTransform: 'uppercase' }}>User Profile</span>
         <button
           onClick={onClose}
           aria-label="Close user profile"
@@ -179,7 +179,7 @@ function UserProfilePanel({
       {loading && (
         <div style={{ padding: 20 }}>
           {[...Array(6)].map((_, i) => (
-            <div key={i} style={{ height: 14, background: '#30363D', borderRadius: 2, marginBottom: 12, width: [80, 140, 100, 120, 90, 110][i] }} />
+            <div key={i} style={{ height: 14, background: C.border, borderRadius: 0, marginBottom: 12, width: [80, 140, 100, 120, 90, 110][i] }} />
           ))}
         </div>
       )}
@@ -191,9 +191,9 @@ function UserProfilePanel({
             <div
               style={{
                 width: 44, height: 44, borderRadius: '50%',
-                background: riskColor(detail.risk_score),
+                background: C.panel, border: `1px solid ${riskColor(detail.risk_score)}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 15, fontWeight: 800, color: '#F0F6FC', flexShrink: 0,
+                fontSize: 15, fontWeight: 500, color: C.textPrimary, flexShrink: 0,
               }}
             >
               {detail.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
@@ -207,7 +207,7 @@ function UserProfilePanel({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 26, fontWeight: 800, color: riskColor(detail.risk_score) }}>
+            <span style={{ fontSize: 26, fontWeight: 500, color: riskColor(detail.risk_score) }}>
               {Math.round(detail.risk_score)}
             </span>
             <div>
@@ -220,10 +220,10 @@ function UserProfilePanel({
 
           {/* Risk history chart */}
           <div>
-            <p style={{ margin: '0 0 8px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+            <p style={{ margin: '0 0 8px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
               30-Day Risk History
             </p>
-            <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, padding: '12px 14px', overflow: 'hidden' }}>
+            <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0, padding: '12px 14px', overflow: 'hidden' }}>
               <RiskHistoryChart history={detail.risk_history} />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
                 <span style={{ fontSize: 9, color: C.textMuted }}>30d ago</span>
@@ -237,7 +237,7 @@ function UserProfilePanel({
 
           {/* Recent alerts */}
           <div>
-            <p style={{ margin: '0 0 8px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+            <p style={{ margin: '0 0 8px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
               Linked Alerts ({detail.recent_alerts.length})
             </p>
             {detail.recent_alerts.length === 0 && (
@@ -257,7 +257,7 @@ function UserProfilePanel({
                     </p>
                     <p style={{ margin: 0, fontSize: 10, color: C.textMuted }}>{timeAgo(alert.ingested_at ?? alert.timestamp)}</p>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 800, color, flexShrink: 0 }}>{Math.round(alert.risk_score)}</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color, flexShrink: 0 }}>{Math.round(alert.risk_score)}</span>
                 </div>
               )
             })}
@@ -266,7 +266,7 @@ function UserProfilePanel({
           {/* SHAP from most recent alert */}
           {detail.recent_alerts[0]?.shap_values?.length > 0 && (
             <div>
-              <p style={{ margin: '0 0 10px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+              <p style={{ margin: '0 0 10px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
                 Top Risk Factors (Latest Alert)
               </p>
               <SHAPChart values={detail.recent_alerts[0].shap_values} />
@@ -276,7 +276,7 @@ function UserProfilePanel({
           {/* Action history */}
           {auditLog.length > 0 && (
             <div>
-              <p style={{ margin: '0 0 8px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+              <p style={{ margin: '0 0 8px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
                 Action History
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -286,7 +286,7 @@ function UserProfilePanel({
                       fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', flexShrink: 0, marginTop: 2,
                       color: entry.action_type === 'restrict' ? C.critical : entry.action_type === 'label' ? C.low : C.textMuted,
                       border: `1px solid ${entry.action_type === 'restrict' ? C.critical : entry.action_type === 'label' ? C.low : C.border}`,
-                      borderRadius: 2, padding: '1px 5px', textTransform: 'uppercase',
+                      borderRadius: 0, padding: '1px 5px', textTransform: 'uppercase',
                     }}>
                       {entry.action_type}
                     </span>
@@ -306,8 +306,8 @@ function UserProfilePanel({
               role="status"
               aria-live="polite"
               style={{
-                padding: '10px 12px', fontSize: 11, color: '#F0F6FC',
-                background: `${banner.color}22`, border: `1px solid ${banner.color}`, borderRadius: 3,
+                padding: '10px 12px', fontSize: 11, color: C.textPrimary,
+                background: `${banner.color}22`, border: `1px solid ${banner.color}`, borderRadius: 0,
                 lineHeight: 1.5,
               }}
             >
@@ -320,10 +320,10 @@ function UserProfilePanel({
               onClick={handleRestrict}
               disabled={restricted}
               style={{
-                padding: '9px 0', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                background: restricted ? '#30363D' : C.critical,
-                border: 'none', color: restricted ? C.textMuted : '#F0F6FC',
-                borderRadius: 3, cursor: restricted ? 'default' : 'pointer',
+                padding: '9px 0', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
+                background: restricted ? C.border : C.critical,
+                border: 'none', color: restricted ? C.textMuted : C.textPrimary,
+                borderRadius: 10, cursor: restricted ? 'default' : 'pointer',
               }}
             >
               {restricted ? 'ACCESS RESTRICTED' : 'RESTRICT ACCESS'}
@@ -333,11 +333,11 @@ function UserProfilePanel({
               onClick={handleEscalate}
               disabled={escalated}
               style={{
-                padding: '9px 0', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                padding: '9px 0', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
                 background: escalated ? `${C.amber}22` : 'transparent',
                 border: `1px solid ${escalated ? C.amber : C.border}`,
                 color: escalated ? C.amber : C.textMuted,
-                borderRadius: 3, cursor: escalated ? 'default' : 'pointer',
+                borderRadius: 10, cursor: escalated ? 'default' : 'pointer',
               }}
             >
               {escalated ? 'ESCALATED' : 'ESCALATE CASE'}
@@ -426,15 +426,15 @@ export default function UsersPage() {
         {/* Top bar */}
         <div
           style={{
-            height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            height: 76, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '0 24px', borderBottom: `1px solid ${C.border}`,
-            background: C.card, flexShrink: 0,
+            background: C.bg, flexShrink: 0,
           }}
         >
-          <h1 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textPrimary }}>User Monitoring</h1>
+          <h1 style={{ margin: 0, fontSize: 34, fontWeight: 400, lineHeight: 1, letterSpacing: '0.006em', color: C.textPrimary }}>User Monitoring</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 11, color: C.textMuted }}>INTERNAL NETWORK: BANK_CORP_01</span>
-            <span style={{ fontSize: 11, color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 3, padding: '3px 8px' }}>
+            <span style={{ fontSize: 11, color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 0, padding: '3px 8px' }}>
               {users.length} Active Employees
             </span>
           </div>
@@ -443,7 +443,7 @@ export default function UsersPage() {
         <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h2 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.textPrimary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <h2 style={{ margin: 0, fontSize: 11, fontWeight: 400, color: C.textPrimary, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 Monitoring Queue
               </h2>
               {/* Watchlist filter tabs */}
@@ -458,7 +458,7 @@ export default function UsersPage() {
                       background: watchlistFilter === tab ? C.textPrimary : 'transparent',
                       border: `1px solid ${watchlistFilter === tab ? C.textPrimary : C.border}`,
                       color: watchlistFilter === tab ? C.bg : C.textMuted,
-                      borderRadius: 3, cursor: 'pointer',
+                      borderRadius: 10, cursor: 'pointer',
                     }}
                   >
                     {tab === 'all' ? 'All' : `Watchlist${watchlist.size > 0 ? ` (${watchlist.size})` : ''}`}
@@ -477,9 +477,9 @@ export default function UsersPage() {
                 URL.revokeObjectURL(url)
               }}
               style={{
-                padding: '6px 14px', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                padding: '6px 14px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
                 background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted,
-                borderRadius: 3, cursor: 'pointer',
+                borderRadius: 10, cursor: 'pointer',
               }}
             >
               EXPORT REPORT
@@ -497,7 +497,7 @@ export default function UsersPage() {
               color: C.textPrimary, fontSize: 12, fontFamily: 'inherit', outline: 'none',
               boxSizing: 'border-box',
             }}
-            onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = '#4D5562' }}
+            onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = C.focus }}
             onBlur={(e) => { (e.target as HTMLInputElement).style.borderColor = C.border }}
           />
 

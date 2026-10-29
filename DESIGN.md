@@ -106,6 +106,11 @@ components:
     padding: "3px 8px"
 ---
 
+> **Superseded (2026-10).** The product now uses the "Ink on Void" system - the OFF+BRAND editorial
+> language (see `docs/design-reference-offbrand.md`) inverted to a deep black theme. The live rules are in
+> `CLAUDE.md` > Design Rules and the tokens in `frontend/lib/tokens.ts`. The notes below describe the previous
+> GitHub-dark palette and are kept for history only.
+
 # Design System: SentinelIQ
 
 ## 1. Overview

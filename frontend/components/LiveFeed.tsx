@@ -51,7 +51,7 @@ function FeedRow({ event, isNew, onAlertClick }: { event: FeedEvent; isNew: bool
             {event.description}
           </span>
           {event.alert_id && (
-            <span style={{ fontSize: 9, fontWeight: 700, color, border: `1px solid ${color}`, borderRadius: 2, padding: '1px 4px', letterSpacing: '0.04em', flexShrink: 0 }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color, border: `1px solid ${color}`, borderRadius: 0, padding: '1px 4px', letterSpacing: '0.04em', flexShrink: 0 }}>
               ALERT ↗
             </span>
           )}
@@ -107,13 +107,15 @@ export default function LiveFeed({ onAlertClick }: { onAlertClick?: (alertId: st
       style={{
         background: C.card,
         border: `1px solid ${C.border}`,
-        borderRadius: 4,
+        borderRadius: 0,
         overflow: 'hidden',
       }}
     >
       <div
         style={{
-          padding: '12px 14px',
+          height: 46,
+          padding: '0 19px',
+          flexShrink: 0,
           borderBottom: `1px solid ${C.border}`,
           display: 'flex',
           justifyContent: 'space-between',
@@ -122,7 +124,7 @@ export default function LiveFeed({ onAlertClick }: { onAlertClick?: (alertId: st
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span className="animate-pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: C.low, display: 'inline-block' }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <span style={{ fontSize: 11, fontWeight: 400, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Live Intelligence Feed
           </span>
         </div>
@@ -131,7 +133,7 @@ export default function LiveFeed({ onAlertClick }: { onAlertClick?: (alertId: st
       {events.length === 0 ? (
         <div style={{ padding: 20, textAlign: 'center' }}>
           {[...Array(5)].map((_, i) => (
-            <div key={i} style={{ height: 48, background: C.hover, borderRadius: 2, marginBottom: 4 }} />
+            <div key={i} style={{ height: 48, background: C.hover, borderRadius: 0, marginBottom: 4 }} />
           ))}
         </div>
       ) : (

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { C } from '@/lib/tokens'
+import Logo from '@/components/Logo'
 
 const NAV = [
   { href: '/dashboard', label: 'Overview', icon: OverviewIcon },
@@ -24,28 +25,16 @@ export default function Sidebar() {
         height: '100vh',
         position: 'sticky',
         top: 0,
-        background: C.card,
+        background: C.bg,
         borderRight: `1px solid ${C.border}`,
         display: 'flex',
         flexDirection: 'column',
       }}
     >
       {/* Logo */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${C.border}` }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 28, height: 28, overflow: 'hidden', flexShrink: 0 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/logo.png"
-                alt="SentinelIQ logo"
-                style={{ height: 28, width: 'auto', display: 'block', objectFit: 'cover', objectPosition: 'left center' }}
-              />
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, letterSpacing: '-0.02em' }}>
-              SentinelIQ
-            </span>
-          </div>
+      <div style={{ height: 76, padding: '0 20px', display: 'flex', alignItems: 'center', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+        <Link href="/" aria-label="SentinelIQ home" style={{ textDecoration: 'none' }}>
+          <Logo size={14} />
         </Link>
       </div>
 
@@ -55,8 +44,8 @@ export default function Sidebar() {
           onClick={() => window.dispatchEvent(new Event('sentinel:cmdk'))}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-            padding: '7px 10px', background: C.bg, border: `1px solid ${C.border}`,
-            borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit',
+            padding: '8px 12px', background: 'transparent', border: `1px solid ${C.border}`,
+            borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
             color: C.textMuted, fontSize: 12,
           }}
         >
@@ -64,13 +53,13 @@ export default function Sidebar() {
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <span style={{ flex: 1, textAlign: 'left' }}>Search…</span>
-          <kbd style={{ fontSize: 9, border: `1px solid ${C.border}`, borderRadius: 2, padding: '1px 4px', color: C.textMuted }}>⌘K</kbd>
+          <kbd style={{ fontSize: 9, border: `1px solid ${C.border}`, borderRadius: 10, padding: '1px 4px', color: C.textMuted }}>⌘K</kbd>
         </button>
       </div>
 
       {/* Nav */}
       <nav style={{ padding: '12px 10px', flex: 1 }}>
-        <p style={{ margin: '0 0 6px 10px', fontSize: 10, color: C.textMuted, letterSpacing: '0.08em', fontWeight: 600, textTransform: 'uppercase' }}>
+        <p style={{ margin: '0 0 15px 12px', fontSize: 11, color: C.textMuted, letterSpacing: '0.05em', fontWeight: 400, textTransform: 'uppercase' }}>
           Intelligence
         </p>
         {NAV.map(({ href, label, icon: Icon }) => {
@@ -84,16 +73,17 @@ export default function Sidebar() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
-                padding: '8px 10px',
-                borderRadius: 4,
+                padding: '9px 12px',
+                borderRadius: 10,
                 marginBottom: 2,
                 textDecoration: 'none',
                 background: active ? C.hover : 'transparent',
                 color: active ? C.textPrimary : C.textMuted,
-                fontSize: 13,
-                fontWeight: active ? 600 : 400,
-                transition: 'background 0.15s',
-                borderLeft: active ? `2px solid ${C.critical}` : '2px solid transparent',
+                fontSize: 15,
+                fontWeight: 400,
+                letterSpacing: '0.006em',
+                transition: 'background 0.15s, color 0.15s',
+                border: active ? `1px solid ${C.border}` : '1px solid transparent',
               }}
             >
               <Icon active={active} />
@@ -105,8 +95,8 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div style={{ padding: '12px 20px', borderTop: `1px solid ${C.border}` }}>
-        <p style={{ margin: 0, fontSize: 10, color: C.textMuted }}>BANK_CORP_01 · Internal Network</p>
-        <p style={{ margin: '2px 0 0', fontSize: 10, color: C.textMuted }}>SentinelIQ v1.0</p>
+        <p style={{ margin: 0, fontSize: 11, color: C.textMuted, letterSpacing: '0.05em', textTransform: 'uppercase' }}>BANK_CORP_01 - Internal</p>
+        <p style={{ margin: '4px 0 0', fontSize: 11, color: C.textFaint, letterSpacing: '0.05em', textTransform: 'uppercase' }}>SentinelIQ v1.0</p>
       </div>
     </aside>
   )

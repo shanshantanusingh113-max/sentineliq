@@ -101,8 +101,8 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
         onClick={e => e.stopPropagation()}
         style={{
           width: 560, background: C.card, border: `1px solid ${C.border}`,
-          borderRadius: 6, overflow: 'hidden',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
+          borderRadius: 0, overflow: 'hidden',
+          boxShadow: 'none',
         }}
       >
         {/* Input */}
@@ -121,7 +121,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
               color: C.textPrimary, fontSize: 14, fontFamily: 'inherit',
             }}
           />
-          <kbd style={{ fontSize: 10, color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 3, padding: '2px 6px', flexShrink: 0 }}>ESC</kbd>
+          <kbd style={{ fontSize: 10, color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 0, padding: '2px 6px', flexShrink: 0 }}>ESC</kbd>
         </div>
 
         {/* Results */}
@@ -129,7 +129,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
           {/* Navigation */}
           {visActions.length > 0 && (
             <>
-              <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: '0.08em' }}>NAVIGATION</div>
+              <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: '0.05em' }}>NAVIGATION</div>
               {visActions.map((it, i) => (
                 <div
                   key={it.id}
@@ -142,7 +142,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
                   }}
                 >
                   <span style={{ fontSize: 13, color: C.textPrimary }}>{it.label}</span>
-                  <kbd style={{ fontSize: 10, color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 3, padding: '2px 6px' }}>{it.hint}</kbd>
+                  <kbd style={{ fontSize: 10, color: C.textMuted, border: `1px solid ${C.border}`, borderRadius: 0, padding: '2px 6px' }}>{it.hint}</kbd>
                 </div>
               ))}
             </>
@@ -151,7 +151,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
           {/* Alerts */}
           {alertItems.length > 0 && (
             <div style={visActions.length > 0 ? sectionBorder : {}}>
-              <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: '0.08em' }}>OPEN ALERTS</div>
+              <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: '0.05em' }}>OPEN ALERTS</div>
               {alertItems.map((it, i) => {
                 const color = it.level === 'critical' || it.level === 'high' ? C.critical : it.level === 'medium' ? C.medium : C.low
                 return (
@@ -179,7 +179,7 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
           {/* Users */}
           {userItems.length > 0 && (
             <div style={(visActions.length > 0 || alertItems.length > 0) ? sectionBorder : {}}>
-              <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: '0.08em' }}>USERS</div>
+              <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: '0.05em' }}>USERS</div>
               {userItems.map((it, i) => {
                 const color = riskColor(it.score)
                 return (
@@ -195,9 +195,9 @@ export default function CommandPalette({ open, onClose, alerts = [], users = [] 
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{
-                        width: 22, height: 22, borderRadius: '50%', background: color,
+                        width: 22, height: 22, borderRadius: '50%', background: C.panel, border: `1px solid ${color}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0,
+                        fontSize: 9, fontWeight: 500, color: C.textPrimary, flexShrink: 0,
                       }}>
                         {it.label.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </div>

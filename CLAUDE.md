@@ -34,23 +34,34 @@ ML models score every event as it arrives. Alerts appear live on the dashboard.
 - No paid APIs, no Kafka, no Redis, no Docker required locally
 
 ## Design Rules - Never Break These
-- Background: #0D1117
-- Card background: #161B22
-- Border: #30363D
-- Text primary: #F0F6FC
-- Text muted: #8B949E
-- Critical/High risk: #DC2626
-- Medium risk: #D97706
-- Low risk: #16A34A
-- Amber: #D97706
-- Hover: #1C2128
-- Use inline style constants from `lib/tokens.ts` as `C` for ALL brand colors
-- NEVER use Tailwind color classes for brand colors (unreliable)
-- NO rounded-full except avatars
-- NO purple, NO gradients, NO Inter font
-- Sharp corners on all cards and buttons
-- Border on all cards: 1px solid #30363D
-- Font: Geist or system font stack
+"Ink on Void" - the OFF+BRAND editorial system inverted to a deep black theme.
+Tokens live in `frontend/lib/tokens.ts` (C, IRIDESCENT, R, LABEL) and mirror CSS vars in `globals.css`.
+- Background (Void): #0A0A09 - Paper (cards): #121211 - Stone (panels/hover): #181816 / #1D1D1B
+- Ash hairlines: #2A2A27 - Text (Bone): #E5E4E0 - Muted (Smoke): #8A8984 - Faint: #55544F
+- Risk colors are the ONLY hues in product UI: Critical/High #DC2626, Medium #D97706, Low #16A34A
+- Iridescent gradient (255deg yellow -> pink -> blue -> white) appears ONCE: the landing hero payment card.
+  Never as a button, border, accent or background anywhere else
+- Use `C` from `lib/tokens.ts` for ALL colors - never raw hex in JSX; no Tailwind color classes
+- Radius: cards/panels/images 0px; interactive elements (buttons, links, inputs, nav items) 10px;
+  circles only for avatars and status dots
+- No box shadows, no glows, no elevation - depth comes from surface shifts and 1px Ash hairlines
+- Font: Inter (substitute for Ataero Retina OB) + JetBrains Mono for data. One sans family only
+- Type scale: 11 / 15 / 18 / 34 / 46 / 70 / 76 / 103px. Display sizes use line-height 0.8, weight 400,
+  uppercase, tracking ~0.013em. Body text 15-18px, left-aligned
+- Labels: 11px uppercase, letter-spacing 0.05em (museum signage). Use `.label` or `LABEL`
+- Primary interactive styles: `.ghost-link` (text + arrow) and `.ghost-pill` (1px Bone outline,
+  inverts to Bone fill on hover). No filled color buttons except destructive risk actions
+- Layout: every landing section sits on one 12-column grid (`.wrap` 1400px column + `.g12`, 19px gutter).
+  Shared column starts: col 1 = index labels, col 2 = section labels and row headings, col 7 = supporting
+  copy. Dashboard pages use a 24px gutter, 76px page header, 46px panel headers and 19px grid gaps
+- Landing hero: headline (cols 1-8) and iridescent bank card + live scoring panel (cols 9-12, `HeroCard`).
+  Hero label top aligns with the card top, headline baseline with the panel bottom. The card floats, tilts
+  toward the pointer and cycles sample transactions (score counts up, verdict FLAGGED/REVIEW/CLEAR).
+  A transaction tape marquee runs under the hero. No circles, spheres or ring ornaments
+- Motion: line-mask headline reveals, hairlines that draw in, count-up numbers (`CountUp`), scroll progress
+  bar, workflow progress line, dashboard `.rise` / `.rise-list` entrance stagger. All motion respects
+  prefers-reduced-motion
+- Landing sections: `(NN)` index label + hairline, 76-119px vertical rhythm
 
 ## ML Models
 1. Isolation Forest (scikit-learn) - point anomaly detection, contamination=0.1, n_estimators=100

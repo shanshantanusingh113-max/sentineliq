@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ink on Void - OFF+BRAND editorial system inverted to deep black.
+   Mirrors lib/tokens.ts; JSX uses the C object, CSS uses these variables. */
+:root {
+  --void: #0A0A09;
+  --paper: #121211;
+  --stone: #181816;
+  --stone-hover: #1D1D1B;
+  --abyss: #050505;
+  --ash: #2A2A27;
+  --ash-strong: #3A3A36;
+  --bone: #E5E4E0;
+  --smoke: #8A8984;
+  --faint: #55544F;
+  --critical: #DC2626;
+  --iridescent: linear-gradient(255deg, rgb(250, 203, 14), rgb(240, 107, 168) 30%, rgb(120, 186, 230) 65%, rgb(255, 255, 255));
+  --font-sans: 'Inter', 'Neue Haas Grotesk Display', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -10,15 +30,32 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background-color: #0D1117;
-  color: #F0F6FC;
-  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background-color: var(--void);
+  color: var(--bone);
+  font-family: var(--font-sans);
+  font-feature-settings: 'ss01', 'cv11';
+  letter-spacing: 0.006em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+code,
+kbd,
+pre,
+.mono {
+  font-family: var(--font-mono);
 }
 
 ::selection {
-  background: #DC2626;
-  color: #fff;
+  background: var(--bone);
+  color: var(--void);
 }
 
 ::-webkit-scrollbar {
@@ -26,25 +63,19 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0D1117;
+  background: var(--void);
 }
 ::-webkit-scrollbar-thumb {
-  background: #30363D;
-  border-radius: 3px;
+  background: var(--ash);
+  border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #8B949E;
+  background: var(--smoke);
 }
 
 @keyframes slideInTop {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse-dot {
@@ -61,14 +92,8 @@ body {
 }
 
 @keyframes panel-slide-in {
-  from {
-    transform: translateX(24px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(24px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
 }
 
 .panel-slide-in {
@@ -76,7 +101,7 @@ body {
 }
 
 @keyframes panel-appear {
-  from { opacity: 0; transform: translate(-50%, -44%) scale(0.94); }
+  from { opacity: 0; transform: translate(-50%, -44%) scale(0.96); }
   to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 @keyframes backdrop-appear {
@@ -91,42 +116,242 @@ body {
   animation: backdrop-appear 0.2s ease forwards;
 }
 
-/* Action button hover - applies to all interactive buttons across the app */
+/* Action buttons - flat, no scale bounce; contrast shift only */
 .btn-action {
-  transition: opacity 0.12s, transform 0.12s;
+  transition: opacity 0.12s, background-color 0.12s, color 0.12s;
 }
 .btn-action:hover:not(:disabled) {
-  opacity: 0.8;
-  transform: scale(1.02);
-}
-.btn-action:active:not(:disabled) {
-  transform: scale(0.97);
+  opacity: 0.82;
 }
 
-/* Landing page interactive hover states */
-.landing-btn-primary {
-  transition: opacity 0.15s;
+/* ---------- Layout system ---------- */
+
+/* 1400px content column with the page gutter */
+.wrap {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(16px, 4vw, 46px);
+  padding-right: clamp(16px, 4vw, 46px);
 }
-.landing-btn-primary:hover {
-  opacity: 0.9;
+/* 12-column grid, 19px gutter - every landing section sits on this */
+.g12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 19px;
 }
-.landing-btn-secondary {
-  transition: border-color 0.18s, color 0.18s;
+
+/* ---------- Editorial primitives ---------- */
+
+/* Museum-signage label */
+.label {
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--smoke);
 }
-.landing-btn-secondary:hover {
-  border-color: #8B949E !important;
-  color: #F0F6FC !important;
+
+/* Ghost text link - the primary interactive element */
+.ghost-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-radius: 10px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--bone);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+}
+.ghost-link .arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.ghost-link:hover {
+  text-decoration: underline;
+}
+.ghost-link:hover .arrow {
+  transform: translateX(4px);
+}
+
+/* Pill ghost button - inverts to Bone on hover */
+.ghost-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 19px;
+  border: 1px solid var(--bone);
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--bone);
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.18s, color 0.18s;
+}
+.ghost-pill:hover {
+  background: var(--bone);
+  color: var(--void);
+}
+.ghost-pill.quiet {
+  border-color: var(--ash-strong);
+}
+.ghost-pill.quiet:hover {
+  border-color: var(--bone);
+}
+
+/* Grid-paper surface for project / feature tiles */
+.grid-paper {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--stone) 1px, transparent 1px),
+    linear-gradient(90deg, var(--stone) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+
+/* Hairline-divided grid (cells sit on Ash) */
+.hairline-grid {
+  display: grid;
+  gap: 1px;
+  background: var(--ash);
+  border: 1px solid var(--ash);
+}
+.hairline-grid > * {
+  background: var(--void);
+}
+
+.cell-hover {
+  transition: background-color 0.18s;
+}
+.cell-hover:hover {
+  background: var(--paper) !important;
+}
+
+/* Hero payment card - scoring sweep across the card face */
+@keyframes card-scan {
+  0%   { transform: translateY(-10%); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(1000%); opacity: 0; }
+}
+.card-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 10%;
+  border-top: 1px solid rgba(10, 10, 9, 0.55);
+  pointer-events: none;
+  animation: card-scan 4.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  animation-delay: 1.2s;
+}
+
+/* Hero card: slow float under the pointer tilt, plus a light sheen pass */
+@keyframes card-float {
+  0%, 100% { transform: translateY(0) rotateZ(-1.2deg); }
+  50%      { transform: translateY(-10px) rotateZ(0.8deg); }
+}
+.card-float {
+  animation: card-float 7s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
+}
+@keyframes card-sheen {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  60%, 100% { transform: translateX(260%) skewX(-18deg); }
+}
+.card-sheen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  pointer-events: none;
+  animation: card-sheen 6s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+/* Capability cards and stack cells respond to hover with line and type shifts only */
+.cap-card {
+  transition: border-color 0.25s;
+}
+.cap-card:hover {
+  border-color: var(--ash-strong) !important;
+}
+.stack-name {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), letter-spacing 0.35s;
+}
+.stack-cell:hover .stack-name {
+  transform: translateY(-3px);
+  letter-spacing: 0.03em;
+}
+.tag {
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.tag:hover {
+  border-color: var(--bone) !important;
+}
+
+/* Dashboard entrance: panels rise in, grid children stagger */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rise,
+.stat-grid-4 > *,
+.rise-list > * {
+  animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stat-grid-4 > :nth-child(2), .rise-list > :nth-child(2) { animation-delay: 0.06s; }
+.stat-grid-4 > :nth-child(3), .rise-list > :nth-child(3) { animation-delay: 0.12s; }
+.stat-grid-4 > :nth-child(4), .rise-list > :nth-child(4) { animation-delay: 0.18s; }
+.rise-list > :nth-child(5) { animation-delay: 0.24s; }
+.rise-list > :nth-child(6) { animation-delay: 0.30s; }
+.rise-list > :nth-child(7) { animation-delay: 0.36s; }
+.rise-list > :nth-child(8) { animation-delay: 0.42s; }
+.rise-list > :nth-child(n+9) { animation-delay: 0.48s; }
+
+/* Transaction tape - continuous ledger marquee under the hero */
+@keyframes tape-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.tape-track {
+  animation: tape-scroll 60s linear infinite;
+}
+.tape-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scroll-nudge {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(4px); }
+}
+.scroll-arrow {
+  display: inline-block;
+  animation: scroll-nudge 1.8s ease-in-out infinite;
 }
 
 /* Nav link with underline slide */
 .landing-nav-link {
   position: relative;
   transition: color 0.15s;
-  cursor: pointer;
   padding-bottom: 2px;
+  text-decoration: none;
 }
 .landing-nav-link:hover {
-  color: #F0F6FC !important;
+  color: var(--bone) !important;
 }
 .landing-nav-link::after {
   content: '';
@@ -135,102 +360,69 @@ body {
   left: 0;
   width: 0;
   height: 1px;
-  background: #DC2626;
+  background: var(--bone);
   transition: width 0.22s ease;
 }
 .landing-nav-link:hover::after {
   width: 100%;
 }
 
-.landing-footer-link {
-  transition: color 0.15s, transform 0.15s;
-  display: inline-block;
-}
-.landing-footer-link:hover {
-  color: #F0F6FC !important;
-  transform: translateX(3px);
-}
-
-.landing-feature-row {
-  transition: background 0.15s;
-  cursor: default;
-}
-.landing-feature-row:hover {
-  background: #1C2128;
-}
-
-/* Framework badge hover */
-.landing-framework-item {
-  transition: color 0.15s, transform 0.15s;
-  display: inline-block;
-}
-.landing-framework-item:hover {
-  color: #F0F6FC !important;
-  transform: translateY(-2px);
-}
-
-/* Scanline sweep for browser mockup */
-@keyframes scanline {
-  0%   { transform: translateY(0); opacity: 0; }
-  5%   { opacity: 1; }
-  95%  { opacity: 1; }
-  100% { transform: translateY(340px); opacity: 0; }
-}
-.mockup-scanline {
-  position: absolute;
-  left: 0; right: 0; top: 0;
-  height: 1px;
-  background: rgba(240,246,252,0.07);
-  pointer-events: none;
-  z-index: 5;
-  animation: scanline 3.5s linear infinite;
-  animation-delay: 1s;
-}
-
-/* Glow pulse on critical risk score */
-@keyframes risk-glow {
-  0%, 100% { text-shadow: 0 0 8px rgba(220,38,38,0.4); }
-  50%       { text-shadow: 0 0 18px rgba(220,38,38,0.7); }
-}
-.risk-glow {
-  animation: risk-glow 2.5s ease-in-out infinite;
-}
-
-/* Keyboard focus indicator - applies to all interactive elements */
+/* Keyboard focus indicator */
 :focus-visible {
-  outline: 2px solid #4D5562;
-  outline-offset: 2px;
+  outline: 1px solid var(--bone);
+  outline-offset: 3px;
 }
 
-/* Responsive layout helpers */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-arrow,
+  .rise,
+  .stat-grid-4 > *,
+  .rise-list > *,
+  .card-float,
+  .card-sheen,
+  .card-scan,
+  .tape-track,
+  .animate-pulse-dot {
+    animation: none !important;
+  }
+}
+
+/* ---------- Responsive layout helpers ---------- */
 @media (max-width: 1024px) {
-  .stat-grid-4 {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  .stat-grid-2 {
-    grid-template-columns: 1fr !important;
-  }
-  .intel-grid {
-    grid-template-columns: 1fr !important;
-  }
+  .stat-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .stat-grid-2 { grid-template-columns: 1fr !important; }
+  .intel-grid  { grid-template-columns: 1fr !important; }
+  .stack-grid  { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+@media (max-width: 860px) {
+  .intro-grid,
+  .work-grid,
+  .split-grid { grid-template-columns: 1fr !important; }
+  .hide-md { display: none !important; }
+  /* collapse the 12-col grid: every child spans the full row */
+  .g12 { row-gap: 30px; }
+  .g12:not(.keep) > * { grid-column: 1 / -1 !important; justify-self: stretch !important; }
+  .g12.keep > :first-child { grid-column: 1 / 8 !important; }
+  .g12.keep > :last-child { grid-column: 8 / 13 !important; }
+  .g12 > .sh-index { grid-column: 1 / 3 !important; }
+  .g12 > .sh-label { grid-column: 3 / 13 !important; }
+  .g12:has(> .sh-index) { row-gap: 0; }
+  .g12.steps-grid { row-gap: 46px; }
+  .step-dot { display: none; }
+  .step > p:first-of-type { margin-top: 30px !important; }
+  .hero-card-col { max-width: 440px; }
+  .g12.hero-label { display: flex !important; gap: 30px; }
+  .hero-h1 h1 { white-space: normal !important; font-size: clamp(44px, 13vw, 70px) !important; }
 }
 
 @media (max-width: 768px) {
-  .steps-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .problem-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .alert-demo-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .stat-grid-4 {
-    grid-template-columns: 1fr 1fr !important;
-  }
-  .sidebar-hidden {
-    display: none !important;
-  }
+  .problem-grid,
+  .alert-demo-grid,
+  .feed-grid { grid-template-columns: 1fr !important; }
+  .stat-grid-4 { grid-template-columns: 1fr 1fr !important; }
+  .stack-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .sidebar-hidden { display: none !important; }
   .panel-full {
     width: 100% !important;
     position: fixed !important;
@@ -240,11 +432,8 @@ body {
     bottom: 0 !important;
     height: 80vh !important;
     border-left: none !important;
-    border-top: 1px solid #30363D !important;
-    border-radius: 8px 8px 0 0 !important;
-  }
-  .feed-grid {
-    grid-template-columns: 1fr !important;
+    border-top: 1px solid var(--ash) !important;
+    border-radius: 0 !important;
   }
   .cases-grid {
     grid-template-columns: 1fr !important;
@@ -253,7 +442,10 @@ body {
 }
 
 @media (max-width: 480px) {
-  .stat-grid-4 {
-    grid-template-columns: 1fr !important;
-  }
+  .stat-grid-4 { grid-template-columns: 1fr !important; }
+  .steps-grid  { grid-template-columns: 1fr !important; }
+}
+
+input[type='range'] {
+  accent-color: var(--bone);
 }

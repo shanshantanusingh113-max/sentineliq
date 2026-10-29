@@ -39,8 +39,8 @@ export default function RiskBadge({ level, score, size = 'md' }: Props) {
         padding,
         fontSize,
         fontWeight: 700,
-        letterSpacing: '0.08em',
-        borderRadius: 2,
+        letterSpacing: '0.05em',
+        borderRadius: 0,
         whiteSpace: 'nowrap',
         fontFamily: 'inherit',
       }}

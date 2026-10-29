@@ -5,26 +5,22 @@ import dynamic from 'next/dynamic'
 import Sidebar from '@/components/Sidebar'
 import { api, type Intelligence, type ModelInfo, type Stats, type WebhookConfig, timeAgo } from '@/lib/api'
 import { C } from '@/lib/tokens'
+import StatCard from '@/components/StatCard'
 
 const IntelligenceCharts = dynamic(() => import('@/components/IntelligenceCharts'), {
   ssr: false,
   loading: () => (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 19 }}>
       {[...Array(4)].map((_, i) => (
-        <div key={i} style={{ height: 300, background: C.card, border: `1px solid ${C.border}`, borderRadius: 4 }} />
+        <div key={i} style={{ height: 300, background: C.card, border: `1px solid ${C.border}`, borderRadius: 0 }} />
       ))}
     </div>
   ),
 })
 
+// Same anatomy as the overview StatCard so both pages line up
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: '18px 20px' }}>
-      <p style={{ margin: '0 0 8px', fontSize: 10, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>{label}</p>
-      <p style={{ margin: 0, fontSize: 28, color: C.textPrimary, fontWeight: 800 }}>{value}</p>
-      {sub && <p style={{ margin: '5px 0 0', fontSize: 11, color: C.textMuted }}>{sub}</p>}
-    </div>
-  )
+  return <StatCard label={label} value={value} sub={sub} />
 }
 
 function ModelCard({
@@ -37,10 +33,10 @@ function ModelCard({
   metric: { label: string; value: string }
 }) {
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: '20px 20px 18px' }}>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, padding: '20px 20px 18px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.textPrimary }}>{name}</p>
-        <span style={{ fontSize: 10, fontWeight: 700, color: C.critical, border: `1px solid ${C.critical}`, borderRadius: 2, padding: '2px 7px', letterSpacing: '0.05em' }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: C.textPrimary }}>{name}</p>
+        <span style={{ fontSize: 10, fontWeight: 700, color: C.critical, border: `1px solid ${C.critical}`, borderRadius: 0, padding: '2px 7px', letterSpacing: '0.05em' }}>
           WEIGHT {weight}
         </span>
       </div>
@@ -49,14 +45,14 @@ function ModelCard({
         {params.map(({ label, value }) => (
           <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 10, color: C.textMuted }}>{label}</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: C.textPrimary, fontFamily: 'monospace' }}>{value}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: C.textPrimary, fontFamily: 'var(--font-mono)' }}>{value}</span>
           </div>
         ))}
       </div>
       <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 10, color: C.textMuted }}>{metric.label}</span>
-          <span style={{ fontSize: 11, fontWeight: 800, color: C.critical }}>{metric.value}</span>
+          <span style={{ fontSize: 11, fontWeight: 500, color: C.critical }}>{metric.value}</span>
         </div>
       </div>
     </div>
@@ -190,19 +186,19 @@ export default function IntelligencePage() {
     <div style={{ display: 'flex', height: '100vh', background: C.bg, overflow: 'hidden' }}>
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-        <div style={{ height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: `1px solid ${C.border}`, background: C.card, flexShrink: 0 }}>
-          <h1 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textPrimary }}>Model Intelligence</h1>
+        <div style={{ height: 76, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: `1px solid ${C.border}`, background: C.bg, flexShrink: 0 }}>
+          <h1 style={{ margin: 0, fontSize: 34, fontWeight: 400, lineHeight: 1, letterSpacing: '0.006em', color: C.textPrimary }}>Model Intelligence</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <span style={{ fontSize: 11, color: C.textMuted }}>Live alert data · last 7 days</span>
             <button
               onClick={runTraining}
               disabled={training}
               style={{
-                padding: '6px 14px', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                background: training ? 'transparent' : C.critical,
-                border: `1px solid ${training ? C.border : C.critical}`,
-                color: training ? C.textMuted : '#F0F6FC',
-                borderRadius: 3, cursor: training ? 'default' : 'pointer',
+                padding: '6px 14px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
+                background: 'transparent',
+                border: `1px solid ${training ? C.border : C.textPrimary}`,
+                color: training ? C.textMuted : C.textPrimary,
+                borderRadius: 10, cursor: training ? 'default' : 'pointer',
                 opacity: training ? 0.7 : 1,
               }}
             >
@@ -213,17 +209,17 @@ export default function IntelligencePage() {
 
         <main style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
           {loading && !data && (
-            <div style={{ height: 120, background: C.card, border: `1px solid ${C.border}`, borderRadius: 4 }} />
+            <div style={{ height: 120, background: C.card, border: `1px solid ${C.border}`, borderRadius: 0 }} />
           )}
 
           {data && (
             <>
               {/* Model Pipeline cards */}
               <div>
-                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 400, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Model Pipeline
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                <div className="rise-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 19 }}>
                   <ModelCard
                     name="Isolation Forest"
                     weight="40%"
@@ -262,13 +258,13 @@ export default function IntelligencePage() {
 
               {/* Ensemble Performance stats */}
               <div>
-                <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 400, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Ensemble Performance
                 </p>
                 <p style={{ margin: '0 0 14px', fontSize: 11, color: C.textMuted }}>
                   Precision and recall computed from analyst-labeled alerts (TP/FP) · {data.training_events || 0} total events processed
                 </p>
-                <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+                <div className="stat-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 19 }}>
                   <Stat label="Precision" value={data.precision != null ? `${(data.precision * 100).toFixed(1)}%` : '-'} sub={data.precision == null ? 'need ≥10 labels' : undefined} />
                   <Stat label="Recall" value={data.recall != null ? `${(data.recall * 100).toFixed(1)}%` : '-'} sub={data.recall == null ? 'need ≥10 labels' : undefined} />
                   <Stat label="F1 Score" value={data.f1 != null ? `${(data.f1 * 100).toFixed(1)}%` : '-'} sub={data.f1 == null ? 'need ≥10 labels' : undefined} />
@@ -279,25 +275,25 @@ export default function IntelligencePage() {
               {/* Training log - own full-width section, below ensemble performance */}
               {logLines.length > 0 && (
                 <div>
-                  <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 400, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Training Log
                   </p>
                   <div
                     ref={logRef}
                     style={{
-                      background: '#0D1117', border: '1px solid #30363D', borderRadius: 4,
-                      padding: 16, fontFamily: 'monospace', fontSize: 12,
-                      color: '#16A34A', lineHeight: 1.9,
+                      background: C.bgDeep, border: `1px solid ${C.border}`, borderRadius: 0,
+                      padding: 16, fontFamily: 'var(--font-mono)', fontSize: 12,
+                      color: C.low, lineHeight: 1.9,
                       minHeight: 200, maxHeight: 400, overflowY: 'auto',
                     }}
                   >
                     {logLines.map((line, i) => (
-                      <div key={i} style={{ color: line.includes('Skipping') || line.includes('insufficient') ? '#D97706' : '#16A34A' }}>
+                      <div key={i} style={{ color: line.includes('Skipping') || line.includes('insufficient') ? C.medium : C.low }}>
                         {line}
                       </div>
                     ))}
                     {training && (
-                      <div style={{ display: 'inline-block', width: 8, height: 14, background: '#16A34A', verticalAlign: 'middle', marginLeft: 2 }} />
+                      <div style={{ display: 'inline-block', width: 8, height: 14, background: C.low, verticalAlign: 'middle', marginLeft: 2 }} />
                     )}
                   </div>
                 </div>
@@ -307,18 +303,18 @@ export default function IntelligencePage() {
 
               {/* Webhook Notifications */}
               <div>
-                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Webhook Notifications
                 </p>
-                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: '20px 20px' }}>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, padding: '20px 20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
                     <div>
                       <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: C.textPrimary }}>Outbound alert notifications</p>
                       <p style={{ margin: 0, fontSize: 12, color: C.textMuted }}>Fires a POST request when any alert scores ≥ 80. Works with Slack, Teams, Discord, or any HTTP endpoint.</p>
                     </div>
                     <span style={{
-                      fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-                      padding: '3px 8px', borderRadius: 2,
+                      fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+                      padding: '3px 8px', borderRadius: 0,
                       border: `1px solid ${webhook?.configured ? C.low : C.border}`,
                       color: webhook?.configured ? C.low : C.textMuted,
                     }}>
@@ -333,8 +329,8 @@ export default function IntelligencePage() {
                       onChange={(e) => setWebhookInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && saveWebhook()}
                       style={{
-                        flex: 1, padding: '8px 12px', fontSize: 12, fontFamily: 'monospace',
-                        background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3,
+                        flex: 1, padding: '8px 12px', fontSize: 12, fontFamily: 'var(--font-mono)',
+                        background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0,
                         color: C.textPrimary, outline: 'none',
                       }}
                     />
@@ -344,7 +340,7 @@ export default function IntelligencePage() {
                       style={{
                         padding: '8px 16px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
                         background: webhookSaved ? C.low : C.textPrimary,
-                        color: C.bg, border: 'none', borderRadius: 3, cursor: 'pointer',
+                        color: C.bg, border: 'none', borderRadius: 10, cursor: 'pointer',
                         flexShrink: 0,
                       }}
                     >
@@ -353,7 +349,7 @@ export default function IntelligencePage() {
                   </div>
                   {webhook?.configured && (
                     <p style={{ margin: '10px 0 0', fontSize: 11, color: C.textMuted }}>
-                      Payload: <code style={{ fontFamily: 'monospace', color: C.textPrimary }}>{'{ alert_id, user_name, risk_score, fraud_type, risk_level, timestamp }'}</code>
+                      Payload: <code style={{ fontFamily: 'var(--font-mono)', color: C.textPrimary }}>{'{ alert_id, user_name, risk_score, fraud_type, risk_level, timestamp }'}</code>
                     </p>
                   )}
                 </div>
@@ -361,18 +357,18 @@ export default function IntelligencePage() {
 
               {/* API Connector */}
               <div>
-                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   External System Connector
                 </p>
-                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: '20px 20px' }}>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, padding: '20px 20px' }}>
                   <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: C.textPrimary }}>Real-time event ingestion</p>
                   <p style={{ margin: '0 0 16px', fontSize: 12, color: C.textMuted }}>
                     POST raw events from Finacle, Temenos, or any core banking system directly into the ML pipeline. Each event is scored and can trigger an alert.
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 19 }}>
                     <div>
-                      <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Endpoint</p>
-                      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3, padding: '8px 12px', fontFamily: 'monospace', fontSize: 11, color: C.textPrimary, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Endpoint</p>
+                      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0, padding: '8px 12px', fontFamily: 'var(--font-mono)', fontSize: 11, color: C.textPrimary, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>POST {apiBase}/api/ingest</span>
                         <button
                           onClick={() => navigator.clipboard.writeText(`${apiBase}/api/ingest`)}
@@ -383,17 +379,17 @@ export default function IntelligencePage() {
                       </div>
                     </div>
                     <div>
-                      <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Response</p>
-                      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3, padding: '8px 12px', fontFamily: 'monospace', fontSize: 11, color: C.textMuted }}>
+                      <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Response</p>
+                      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0, padding: '8px 12px', fontFamily: 'var(--font-mono)', fontSize: 11, color: C.textMuted }}>
                         {'{ event_id, risk_score, risk_level, alert_id?, alert_triggered }'}
                       </div>
                     </div>
                   </div>
                   <div style={{ marginTop: 12 }}>
-                    <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Required fields</p>
+                    <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Required fields</p>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {['user_id', 'event_type', 'department', 'location', 'hour', 'tx_count', 'download_mb'].map(f => (
-                        <span key={f} style={{ fontSize: 10, fontFamily: 'monospace', color: C.textPrimary, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 2, padding: '2px 7px' }}>{f}</span>
+                        <span key={f} style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: C.textPrimary, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 0, padding: '2px 7px' }}>{f}</span>
                       ))}
                     </div>
                   </div>
@@ -403,7 +399,7 @@ export default function IntelligencePage() {
           )}
 
           {!loading && !data && (
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: 24, color: C.textMuted }}>
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, padding: 24, color: C.textMuted }}>
               Intelligence metrics unavailable while the backend starts.
             </div>
           )}

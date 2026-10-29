@@ -16,9 +16,9 @@ import { C } from '@/lib/tokens'
 
 function Panel({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, padding: 18 }}>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, padding: 18 }}>
       <div style={{ marginBottom: 14 }}>
-        <p style={{ margin: '0 0 2px', fontSize: 12, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 800 }}>{title}</p>
+        <p style={{ margin: '0 0 2px', fontSize: 12, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>{title}</p>
         {sub && <p style={{ margin: 0, fontSize: 10, color: C.textMuted }}>{sub}</p>}
       </div>
       {children}
@@ -75,10 +75,10 @@ export default function IntelligenceCharts({ data }: { data: Intelligence }) {
                   <div style={{ width: 138, fontSize: 12, color: C.textPrimary, flexShrink: 0 }}>
                     {formatFraudType(a.fraud_type).replace('Bulk Download', 'Bulk data download').replace('Cross Department Access', 'Cross-dept access')}
                   </div>
-                  <div style={{ flex: 1, position: 'relative', height: 12, background: C.bg, borderRadius: 3 }}>
-                    <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${w}%`, background: barColor, borderRadius: 3, transition: 'width 0.4s ease' }} />
+                  <div style={{ flex: 1, position: 'relative', height: 12, background: C.bg, borderRadius: 0 }}>
+                    <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${w}%`, background: barColor, borderRadius: 0, transition: 'width 0.4s ease' }} />
                   </div>
-                  <div className="mono" style={{ width: 32, textAlign: 'right', fontSize: 12, fontWeight: 600, color: C.textPrimary, flexShrink: 0 }}>{a.count}</div>
+                  <div className="mono" style={{ width: 32, textAlign: 'right', fontSize: 12, fontWeight: 500, color: C.textPrimary, flexShrink: 0 }}>{a.count}</div>
                   <div style={{ width: 44, textAlign: 'right', fontSize: 10, color: C.textMuted, flexShrink: 0 }}>avg {avgRate}</div>
                 </div>
               )
@@ -97,9 +97,9 @@ export default function IntelligenceCharts({ data }: { data: Intelligence }) {
                 return (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 72, fontSize: 11.5, color: C.textPrimary, flexShrink: 0 }}>{d.department}</div>
-                    <div style={{ flex: 1, position: 'relative', height: 18, background: C.bg, borderRadius: 3 }}>
-                      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.min(100, d.avg_risk)}%`, background: barColor, opacity: 0.85, borderRadius: 3 }} />
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', paddingLeft: 7, fontFamily: 'monospace', fontSize: 11, color: C.textPrimary, fontWeight: 600 }}>{d.avg_risk.toFixed(0)}</div>
+                    <div style={{ flex: 1, position: 'relative', height: 18, background: C.bg, borderRadius: 0 }}>
+                      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.min(100, d.avg_risk)}%`, background: barColor, opacity: 0.85, borderRadius: 0 }} />
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', paddingLeft: 7, fontFamily: 'var(--font-mono)', fontSize: 11, color: C.textPrimary, fontWeight: 500 }}>{d.avg_risk.toFixed(0)}</div>
                     </div>
                     <div style={{ width: 52, textAlign: 'right', fontSize: 10, color: C.textMuted, flexShrink: 0 }}>{d.alert_count} alerts</div>
                   </div>

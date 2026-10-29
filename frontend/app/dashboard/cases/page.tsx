@@ -32,18 +32,18 @@ function CaseCard({ item, active, onClick }: { item: CaseItem; active: boolean; 
         borderRight: `1px solid ${active ? color : C.border}`,
         borderBottom: `1px solid ${active ? color : C.border}`,
         borderLeft: `3px solid ${color}`,
-        borderRadius: 4, padding: 16, cursor: 'pointer',
+        borderRadius: 0, padding: 19, cursor: 'pointer',
         color: C.textPrimary, fontFamily: 'inherit', transition: 'background 0.15s',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
         <div>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.textPrimary }}>{item.name}</p>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: C.textPrimary }}>{item.name}</p>
           <p style={{ margin: '3px 0 0', fontSize: 11, color: C.textMuted }}>
             {item.user_names.join(', ')} · {item.users_involved.length} user{item.users_involved.length === 1 ? '' : 's'}
           </p>
         </div>
-        <span style={{ fontSize: 10, fontWeight: 700, color, border: `1px solid ${color}`, borderRadius: 3, padding: '2px 7px', letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color, border: `1px solid ${color}`, borderRadius: 10, padding: '2px 7px', letterSpacing: '0.05em', textTransform: 'uppercase', flexShrink: 0 }}>
           {item.severity}
         </span>
       </div>
@@ -55,7 +55,7 @@ function CaseCard({ item, active, onClick }: { item: CaseItem; active: boolean; 
       <div style={{ display: 'flex', gap: 16, fontSize: 11, color: C.textMuted }}>
         <span>{item.linked_alerts_count} alerts</span>
         <span>{timeAgo(item.start_time)}</span>
-        <span style={{ color: item.status === 'open' ? C.critical : C.low, fontWeight: 600, textTransform: 'uppercase', marginLeft: 'auto' }}>{item.status}</span>
+        <span style={{ color: item.status === 'open' ? C.critical : C.low, fontWeight: 500, textTransform: 'uppercase', marginLeft: 'auto' }}>{item.status}</span>
       </div>
     </button>
   )
@@ -101,10 +101,10 @@ function CaseTimeline({ caseId }: { caseId: string }) {
             }} />
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, flex: 1, minWidth: 0 }}>
               <div style={{ flexShrink: 0, lineHeight: 1, paddingTop: 1 }}>
-                <div style={{ fontSize: 10, color: C.textMuted, fontFamily: 'monospace' }}>{ts}</div>
+                <div style={{ fontSize: 10, color: C.textMuted, fontFamily: 'var(--font-mono)' }}>{ts}</div>
               </div>
               <span style={{
-                fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 3,
+                fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 0,
                 border: `1px solid ${color}`, color,
                 flexShrink: 0, letterSpacing: '0.04em', lineHeight: 1.4,
               }}>{tag}</span>
@@ -181,13 +181,13 @@ export default function CasesPage() {
 
         {/* Case list */}
         <div style={{ flex: 1, minWidth: 300, maxWidth: 480, flexShrink: 0, height: '100vh', display: 'flex', flexDirection: 'column', borderRight: `1px solid ${C.border}` }}>
-          <div style={{ height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', borderBottom: `1px solid ${C.border}`, background: C.card, flexShrink: 0 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: C.textPrimary }}>Kill Chain Cases</span>
+          <div style={{ height: 76, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: `1px solid ${C.border}`, background: C.bg, flexShrink: 0 }}>
+            <h1 style={{ margin: 0, fontSize: 34, fontWeight: 400, lineHeight: 1, letterSpacing: '0.006em', color: C.textPrimary }}>Kill Chain Cases</h1>
             <span style={{ fontSize: 11, color: C.textMuted }}>{cases.length} active</span>
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="rise-list" style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 19 }}>
             {loading && [...Array(3)].map((_, i) => (
-              <div key={i} style={{ height: 110, background: C.card, border: `1px solid ${C.border}`, borderRadius: 4 }} />
+              <div key={i} style={{ height: 110, background: C.card, border: `1px solid ${C.border}`, borderRadius: 0 }} />
             ))}
             {!loading && cases.length === 0 && (
               <div style={{ color: C.textMuted, fontSize: 12, padding: 16 }}>No open kill-chain cases.</div>
@@ -207,10 +207,10 @@ export default function CasesPage() {
           ) : (
             <>
               {/* Detail header */}
-              <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, background: C.card, flexShrink: 0 }}>
+              <div style={{ padding: banner ? '15px 24px' : '0 24px', minHeight: 76, display: 'flex', flexDirection: 'column', justifyContent: 'center', borderBottom: `1px solid ${C.border}`, background: C.bg, flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: banner ? 10 : 0 }}>
                   <div>
-                    <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: C.textPrimary }}>{selectedCase.name}</p>
+                    <p style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 400, color: C.textPrimary }}>{selectedCase.name}</p>
                     <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>{selectedCase.user_names.join(', ')} · {selectedCase.linked_alerts_count} alerts</p>
                   </div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -222,7 +222,7 @@ export default function CasesPage() {
                           background: view === v ? C.hover : 'transparent',
                           border: `1px solid ${view === v ? C.border : 'transparent'}`,
                           color: view === v ? C.textPrimary : C.textMuted,
-                          borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit',
+                          borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
                           textTransform: 'capitalize',
                         }}
                       >{v}</button>
@@ -233,9 +233,9 @@ export default function CasesPage() {
                       onClick={handleResolve}
                       disabled={acting}
                       style={{
-                        padding: '5px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
-                        background: C.low, border: 'none', color: '#fff',
-                        borderRadius: 3, cursor: acting ? 'default' : 'pointer', fontFamily: 'inherit',
+                        padding: '6px 15px', fontSize: 11, fontWeight: 400, letterSpacing: '0.05em',
+                        background: 'transparent', border: `1px solid ${C.textPrimary}`, color: C.textPrimary,
+                        borderRadius: 10, cursor: acting ? 'default' : 'pointer', fontFamily: 'inherit',
                         opacity: acting ? 0.6 : 1,
                       }}
                     >RESOLVE</button>
@@ -243,9 +243,9 @@ export default function CasesPage() {
                       onClick={handleDismiss}
                       disabled={acting}
                       style={{
-                        padding: '5px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em',
+                        padding: '6px 15px', fontSize: 11, fontWeight: 400, letterSpacing: '0.05em',
                         background: 'transparent', border: `1px solid ${C.border}`, color: C.textMuted,
-                        borderRadius: 3, cursor: acting ? 'default' : 'pointer', fontFamily: 'inherit',
+                        borderRadius: 10, cursor: acting ? 'default' : 'pointer', fontFamily: 'inherit',
                         opacity: acting ? 0.6 : 1,
                       }}
                     >DISMISS</button>
@@ -255,7 +255,7 @@ export default function CasesPage() {
                   <div style={{
                     padding: '7px 10px', fontSize: 11, color: banner.color,
                     background: `${banner.color}18`, border: `1px solid ${banner.color}44`,
-                    borderRadius: 3, lineHeight: 1.5,
+                    borderRadius: 0, lineHeight: 1.5,
                   }}>
                     {banner.text}
                   </div>
@@ -263,10 +263,10 @@ export default function CasesPage() {
               </div>
 
               {/* Detail body */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
                 {view === 'timeline' ? (
                   <div>
-                    <p style={{ margin: '0 0 16px', fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+                    <p style={{ margin: '0 0 16px', fontSize: 11, color: C.textPrimary, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 400 }}>
                       Investigation Timeline
                     </p>
                     <CaseTimeline caseId={selectedCase.id} />
@@ -283,7 +283,7 @@ export default function CasesPage() {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                           <span style={{ fontSize: 12, fontWeight: 700, color: C.textPrimary }}>{alert.user_name}</span>
-                          <span style={{ fontSize: 13, fontWeight: 800, color: alert.risk_level === 'critical' || alert.risk_level === 'high' ? C.critical : alert.risk_level === 'medium' ? C.medium : C.low }}>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: alert.risk_level === 'critical' || alert.risk_level === 'high' ? C.critical : alert.risk_level === 'medium' ? C.medium : C.low }}>
                             {Math.round(alert.risk_score)}
                           </span>
                         </div>
